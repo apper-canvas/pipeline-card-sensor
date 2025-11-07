@@ -1,86 +1,266 @@
-import activitiesData from "@/services/mockData/activities.json";
-
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+import { getApperClient } from "@/services/apperClient";
+import { toast } from "react-toastify";
 
 export const activitiesService = {
   async getAll() {
-    await delay(250);
-    return [...activitiesData];
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        console.error("ApperClient not initialized");
+        return [];
+      }
+
+      const params = {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "type_c"}},
+          {"field": {"Name": "related_to_c"}},
+          {"field": {"Name": "related_type_c"}},
+          {"field": {"Name": "subject_c"}},
+          {"field": {"Name": "description_c"}},
+          {"field": {"Name": "scheduled_at_c"}},
+          {"field": {"Name": "completed_at_c"}},
+          {"field": {"Name": "CreatedBy"}},
+          {"field": {"Name": "CreatedOn"}},
+          {"field": {"Name": "ModifiedOn"}}
+        ]
+      };
+
+      const response = await apperClient.fetchRecords('activity_c', params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        return [];
+      }
+
+      return response.data || [];
+    } catch (error) {
+      console.error("Error fetching activities:", error?.response?.data?.message || error);
+      return [];
+    }
   },
 
   async getById(id) {
-    await delay(200);
-    const activity = activitiesData.find(item => item.Id === parseInt(id));
-    if (!activity) {
-      throw new Error("Activity not found");
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        console.error("ApperClient not initialized");
+        return null;
+      }
+
+      const params = {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "type_c"}},
+          {"field": {"Name": "related_to_c"}},
+          {"field": {"Name": "related_type_c"}},
+          {"field": {"Name": "subject_c"}},
+          {"field": {"Name": "description_c"}},
+          {"field": {"Name": "scheduled_at_c"}},
+          {"field": {"Name": "completed_at_c"}}
+        ]
+      };
+
+      const response = await apperClient.getRecordById('activity_c', id, params);
+
+      if (!response.success) {
+        console.error(response.message);
+        return null;
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching activity ${id}:`, error?.response?.data?.message || error);
+      return null;
     }
-    return { ...activity };
   },
 
   async create(activityData) {
-    await delay(350);
-    const newActivity = {
-      ...activityData,
-      Id: Math.max(...activitiesData.map(item => item.Id), 0) + 1,
-      scheduledAt: activityData.scheduledAt || new Date().toISOString(),
-      createdBy: activityData.createdBy || "Current User"
-    };
-    activitiesData.push(newActivity);
-    return { ...newActivity };
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        console.error("ApperClient not initialized");
+        return null;
+      }
+
+      // Only include Updateable fields
+      const createData = {
+        Name: activityData.subject_c || activityData.subject,
+        type_c: activityData.type_c || activityData.type,
+        related_to_c: activityData.related_to_c || activityData.relatedTo,
+        related_type_c: activityData.related_type_c || activityData.relatedType,
+        subject_c: activityData.subject_c || activityData.subject,
+        description_c: activityData.description_c || activityData.description,
+        scheduled_at_c: activityData.scheduled_at_c || activityData.scheduledAt || new Date().toISOString(),
+        completed_at_c: activityData.completed_at_c || activityData.completedAt
+      };
+
+      // Remove null/undefined values
+      Object.keys(createData).forEach(key => {
+        if (createData[key] === null || createData[key] === undefined || createData[key] === '') {
+          delete createData[key];
+        }
+      });
+
+      const params = {
+        records: [createData]
+      };
+
+      const response = await apperClient.createRecord('activity_c', params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        return null;
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success);
+        const failed = response.results.filter(r => !r.success);
+
+        if (failed.length > 0) {
+          console.error(`Failed to create ${failed.length} records:`, failed);
+          failed.forEach(record => {
+            if (record.message) toast.error(record.message);
+          });
+        }
+
+        return successful.length > 0 ? successful[0].data : null;
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error creating activity:", error?.response?.data?.message || error);
+      return null;
+    }
   },
 
   async update(id, updates) {
-    await delay(300);
-    const index = activitiesData.findIndex(item => item.Id === parseInt(id));
-    if (index === -1) {
-      throw new Error("Activity not found");
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        console.error("ApperClient not initialized");
+        return null;
+      }
+
+      // Only include Updateable fields
+      const updateData = { Id: parseInt(id) };
+
+      // Map old field names to new ones
+      const fieldMapping = {
+        type: 'type_c',
+        relatedTo: 'related_to_c',
+        relatedType: 'related_type_c',
+        subject: 'subject_c',
+        description: 'description_c',
+        scheduledAt: 'scheduled_at_c',
+        completedAt: 'completed_at_c'
+      };
+
+      Object.keys(updates).forEach(key => {
+        const dbField = fieldMapping[key] || key;
+        
+        if (updates[key] !== null && updates[key] !== undefined && updates[key] !== '') {
+          updateData[dbField] = updates[key];
+        }
+      });
+
+      // Update Name field if subject_c is being updated
+      if (updateData.subject_c) {
+        updateData.Name = updateData.subject_c;
+      }
+
+      const params = {
+        records: [updateData]
+      };
+
+      const response = await apperClient.updateRecord('activity_c', params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        return null;
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success);
+        const failed = response.results.filter(r => !r.success);
+
+        if (failed.length > 0) {
+          console.error(`Failed to update ${failed.length} records:`, failed);
+          failed.forEach(record => {
+            if (record.message) toast.error(record.message);
+          });
+        }
+
+        return successful.length > 0 ? successful[0].data : null;
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error updating activity:", error?.response?.data?.message || error);
+      return null;
     }
-    
-    activitiesData[index] = {
-      ...activitiesData[index],
-      ...updates,
-      Id: parseInt(id)
-    };
-    
-    return { ...activitiesData[index] };
   },
 
   async delete(id) {
-    await delay(250);
-    const index = activitiesData.findIndex(item => item.Id === parseInt(id));
-    if (index === -1) {
-      throw new Error("Activity not found");
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        console.error("ApperClient not initialized");
+        return false;
+      }
+
+      const params = {
+        RecordIds: [parseInt(id)]
+      };
+
+      const response = await apperClient.deleteRecord('activity_c', params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error deleting activity:", error?.response?.data?.message || error);
+      return false;
     }
-    
-    const deletedActivity = activitiesData[index];
-    activitiesData.splice(index, 1);
-    return { ...deletedActivity };
   },
 
   async getByRelatedItem(relatedTo, relatedType) {
-    await delay(200);
-    return activitiesData
-      .filter(activity => activity.relatedTo === relatedTo && activity.relatedType === relatedType)
-      .map(activity => ({ ...activity }));
+    try {
+      const activities = await this.getAll();
+      return activities
+        .filter(activity => 
+          (activity.related_to_c || activity.relatedTo) === relatedTo && 
+          (activity.related_type_c || activity.relatedType) === relatedType
+        );
+    } catch (error) {
+      console.error("Error getting activities by related item:", error);
+      return [];
+    }
   },
 
   async getByType(type) {
-    await delay(200);
-    return activitiesData.filter(activity => activity.type === type).map(activity => ({ ...activity }));
+    try {
+      const activities = await this.getAll();
+      return activities.filter(activity => (activity.type_c || activity.type) === type);
+    } catch (error) {
+      console.error("Error getting activities by type:", error);
+      return [];
+    }
   },
 
   async markCompleted(id) {
-    await delay(250);
-    const index = activitiesData.findIndex(item => item.Id === parseInt(id));
-    if (index === -1) {
-      throw new Error("Activity not found");
+    try {
+      return await this.update(id, { completedAt: new Date().toISOString() });
+    } catch (error) {
+      console.error("Error marking activity as completed:", error);
+      return null;
     }
-    
-    activitiesData[index] = {
-      ...activitiesData[index],
-      completedAt: new Date().toISOString()
-    };
-    
-    return { ...activitiesData[index] };
   }
 };

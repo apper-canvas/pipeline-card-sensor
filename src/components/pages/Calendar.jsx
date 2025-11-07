@@ -1,28 +1,16 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import ApperIcon from "@/components/ApperIcon";
-import Button from "@/components/atoms/Button";
-import Input from "@/components/atoms/Input";
-import Loading from "@/components/ui/Loading";
-import Error from "@/components/ui/Error";
-import Empty from "@/components/ui/Empty";
+import React, { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { calendarService } from "@/services/api/calendarService";
 import { leadsService } from "@/services/api/leadsService";
 import { dealsService } from "@/services/api/dealsService";
-import { 
-  format, 
-  startOfMonth, 
-  endOfMonth, 
-  startOfWeek, 
-  endOfWeek, 
-  addDays, 
-  isSameMonth, 
-  isSameDay,
-  addMonths,
-  subMonths,
-  isToday
-} from "date-fns";
+import { addDays, addMonths, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, isToday, startOfMonth, startOfWeek, subMonths } from "date-fns";
 import { toast } from "react-toastify";
+import ApperIcon from "@/components/ApperIcon";
+import Button from "@/components/atoms/Button";
+import Input from "@/components/atoms/Input";
+import Error from "@/components/ui/Error";
+import Empty from "@/components/ui/Empty";
+import Loading from "@/components/ui/Loading";
 
 const Calendar = () => {
   const [events, setEvents] = useState([]);
@@ -81,13 +69,12 @@ const Calendar = () => {
   const handleAddEvent = async (e) => {
     e.preventDefault();
     
-    try {
+try {
       const eventData = {
         ...newEvent,
         startTime: new Date(newEvent.startTime).toISOString(),
         endTime: new Date(newEvent.endTime).toISOString()
       };
-      
       const createdEvent = await calendarService.create(eventData);
       setEvents(prev => [createdEvent, ...prev]);
       setShowAddModal(false);
@@ -115,19 +102,18 @@ const Calendar = () => {
     if (!relatedTo) return "";
     
     if (relatedType === "lead") {
-      const lead = leads.find(l => l.Id === parseInt(relatedTo));
-      return lead ? lead.name : "Unknown Lead";
+const lead = leads.find(l => l.Id === parseInt(relatedTo));
+      return lead ? (lead.name_c || lead.name) : "Unknown Lead";
     } else if (relatedType === "deal") {
       const deal = deals.find(d => d.Id === parseInt(relatedTo));
-      return deal ? deal.title : "Unknown Deal";
+return deal ? (deal.title_c || deal.title) : "Unknown Deal";
     }
-    
     return "";
   };
 
   const getEventsForDate = (date) => {
-    return events.filter(event => 
-      isSameDay(new Date(event.startTime), date)
+return events.filter(event => 
+      isSameDay(new Date(event.start_time_c || event.startTime), date)
     );
   };
 
@@ -194,7 +180,7 @@ const Calendar = () => {
                   >
                     <div className="flex items-center">
                       <ApperIcon name={eventType.icon} className="w-3 h-3 mr-1 flex-shrink-0" />
-                      <span className="truncate">{event.title}</span>
+<span className="truncate">{event.title_c || event.title}</span>
                     </div>
                   </motion.div>
                 );
@@ -407,17 +393,17 @@ const Calendar = () => {
                         className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       >
                         <option value="none-none">Not related</option>
-                        <optgroup label="Leads">
+<optgroup label="Leads">
                           {leads.map(lead => (
                             <option key={`lead-${lead.Id}`} value={`lead-${lead.Id}`}>
-                              {lead.name} - {lead.company}
+                              {lead.name_c || lead.name} - {lead.company_c || lead.company}
                             </option>
                           ))}
                         </optgroup>
                         <optgroup label="Deals">
                           {deals.map(deal => (
                             <option key={`deal-${deal.Id}`} value={`deal-${deal.Id}`}>
-                              {deal.title}
+                              {deal.title_c || deal.title}
                             </option>
                           ))}
                         </optgroup>
@@ -511,15 +497,15 @@ const Calendar = () => {
                 <div className="p-6 border-b border-slate-200">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white ${
-                        getEventTypeConfig(selectedEvent.type).color
+<div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white ${
+                        getEventTypeConfig(selectedEvent.type_c || selectedEvent.type).color
                       }`}>
-                        <ApperIcon name={getEventTypeConfig(selectedEvent.type).icon} className="w-5 h-5" />
+                        <ApperIcon name={getEventTypeConfig(selectedEvent.type_c || selectedEvent.type).icon} className="w-5 h-5" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-slate-900">{selectedEvent.title}</h3>
+                        <h3 className="text-lg font-semibold text-slate-900">{selectedEvent.title_c || selectedEvent.title}</h3>
                         <p className="text-sm text-slate-600">
-                          {getEventTypeConfig(selectedEvent.type).label}
+                          {getEventTypeConfig(selectedEvent.type_c || selectedEvent.type).label}
                         </p>
                       </div>
                     </div>
@@ -535,37 +521,36 @@ const Calendar = () => {
                 <div className="p-6 space-y-4">
                   <div className="flex items-center text-sm text-slate-600">
                     <ApperIcon name="Clock" className="w-4 h-4 mr-3 text-slate-400" />
-                    <span>
-                      {format(new Date(selectedEvent.startTime), "MMM dd, yyyy 'at' h:mm a")} - {" "}
-                      {format(new Date(selectedEvent.endTime), "h:mm a")}
+<span>
+                      {format(new Date(selectedEvent.start_time_c || selectedEvent.startTime), "MMM dd, yyyy 'at' h:mm a")} -{" "}
+                      {format(new Date(selectedEvent.end_time_c || selectedEvent.endTime), "h:mm a")}
                     </span>
                   </div>
                   
-                  {selectedEvent.location && (
+{(selectedEvent.location_c || selectedEvent.location) && (
                     <div className="flex items-center text-sm text-slate-600">
                       <ApperIcon name="MapPin" className="w-4 h-4 mr-3 text-slate-400" />
-                      <span>{selectedEvent.location}</span>
+                      <span>{selectedEvent.location_c || selectedEvent.location}</span>
                     </div>
                   )}
                   
-                  {selectedEvent.relatedTo && (
+{(selectedEvent.related_to_c || selectedEvent.relatedTo) && (
                     <div className="flex items-center text-sm text-slate-600">
                       <ApperIcon name="Link" className="w-4 h-4 mr-3 text-slate-400" />
                       <span>
-                        Related to {selectedEvent.relatedType}: {getRelatedName(selectedEvent.relatedTo, selectedEvent.relatedType)}
+                        Related to {selectedEvent.related_type_c || selectedEvent.relatedType}: {getRelatedName(selectedEvent.related_to_c || selectedEvent.relatedTo, selectedEvent.related_type_c || selectedEvent.relatedType)}
                       </span>
                     </div>
                   )}
                   
-                  {selectedEvent.description && (
+{(selectedEvent.description_c || selectedEvent.description) && (
                     <div>
                       <h4 className="text-sm font-semibold text-slate-900 mb-2">Description</h4>
                       <div className="p-3 bg-slate-50 rounded-lg">
-                        <p className="text-sm text-slate-600">{selectedEvent.description}</p>
+                        <p className="text-sm text-slate-600">{selectedEvent.description_c || selectedEvent.description}</p>
                       </div>
                     </div>
                   )}
-                  
                   <div className="flex space-x-3 pt-4 border-t border-slate-200">
                     <Button variant="outline" className="flex-1">
                       <ApperIcon name="Edit" className="w-4 h-4 mr-2" />

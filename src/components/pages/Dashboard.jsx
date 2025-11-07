@@ -1,14 +1,14 @@
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import ApperIcon from "@/components/ApperIcon";
-import MetricCard from "@/components/molecules/MetricCard";
-import Loading from "@/components/ui/Loading";
-import Error from "@/components/ui/Error";
 import ReactApexChart from "react-apexcharts";
 import { leadsService } from "@/services/api/leadsService";
 import { dealsService } from "@/services/api/dealsService";
 import { activitiesService } from "@/services/api/activitiesService";
 import { format, subDays } from "date-fns";
+import ApperIcon from "@/components/ApperIcon";
+import MetricCard from "@/components/molecules/MetricCard";
+import Error from "@/components/ui/Error";
+import Loading from "@/components/ui/Loading";
 
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState({
@@ -27,7 +27,7 @@ const Dashboard = () => {
     setError("");
     
     try {
-      const [leads, deals, activities] = await Promise.all([
+const [leads, deals, activities] = await Promise.all([
         leadsService.getAll(),
         dealsService.getAll(),
         activitiesService.getAll()
@@ -35,15 +35,17 @@ const Dashboard = () => {
 
 // Calculate basic metrics
       const totalLeads = leads.length;
-      const qualifiedLeads = leads.filter(lead => lead.status === "qualified").length;
-      const activeDeals = deals.filter(deal => !["closed_won", "closed_lost"].includes(deal.stage)).length;
-      const totalRevenue = deals
-        .filter(deal => deal.stage === "closed_won")
-        .reduce((sum, deal) => sum + deal.value, 0);
-      
-      const conversionRate = totalLeads > 0 ? Math.round((qualifiedLeads / totalLeads) * 100) : 0;
+const qualifiedLeads = leads.filter(lead => (lead.status_c || lead.status) === "qualified").length;
+      const activeDeals = deals.filter(deal => !["closed_won", "closed_lost"].includes(deal.stage_c || deal.stage)).length;
+      const revenue = deals
+        .filter(deal => (deal.stage_c || deal.stage) === "closed_won")
+        .reduce((sum, deal) => sum + (deal.value_c || deal.value || 0), 0);
 
-      // Get advanced deal metrics
+// Calculate conversion rate and total revenue
+      const conversionRate = totalLeads > 0 ? ((qualifiedLeads / totalLeads) * 100).toFixed(1) : 0;
+      const totalRevenue = revenue;
+
+      // Get advanced metrics
       const dealMetrics = await dealsService.getMetrics();
       const winRateData = await leadsService.getWinRateBySource(deals);
 
@@ -59,15 +61,15 @@ const Dashboard = () => {
 
       // Pipeline distribution
       const stageData = [
-        { stage: "New", count: deals.filter(d => d.stage === "new").length },
-        { stage: "Qualified", count: deals.filter(d => d.stage === "qualified").length },
-        { stage: "Proposal", count: deals.filter(d => d.stage === "proposal").length },
-        { stage: "Negotiation", count: deals.filter(d => d.stage === "negotiation").length }
+        { stage: "New", count: deals.filter(d => (d.stage_c || d.stage) === "new").length },
+        { stage: "Qualified", count: deals.filter(d => (d.stage_c || d.stage) === "qualified").length },
+        { stage: "Proposal", count: deals.filter(d => (d.stage_c || d.stage) === "proposal").length },
+        { stage: "Negotiation", count: deals.filter(d => (d.stage_c || d.stage) === "negotiation").length }
       ];
 
       // Recent activities
       const recentActivities = activities
-        .sort((a, b) => new Date(b.scheduledAt) - new Date(a.scheduledAt))
+        .sort((a, b) => new Date(b.scheduled_at_c || b.scheduledAt) - new Date(a.scheduled_at_c || a.scheduledAt))
         .slice(0, 8);
 
       setDashboardData({
@@ -340,26 +342,26 @@ const Dashboard = () => {
                 className="p-6 hover:bg-slate-50 transition-colors"
               >
                 <div className="flex items-start space-x-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    activity.type === "call" ? "bg-blue-100" :
-                    activity.type === "email" ? "bg-purple-100" :
-                    activity.type === "meeting" ? "bg-green-100" :
-                    activity.type === "task" ? "bg-yellow-100" :
+<div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    (activity.type_c || activity.type) === "call" ? "bg-blue-100" :
+                    (activity.type_c || activity.type) === "email" ? "bg-purple-100" :
+                    (activity.type_c || activity.type) === "meeting" ? "bg-green-100" :
+                    (activity.type_c || activity.type) === "task" ? "bg-yellow-100" :
                     "bg-slate-100"
                   }`}>
                     <ApperIcon 
                       name={
-                        activity.type === "call" ? "Phone" :
-                        activity.type === "email" ? "Mail" :
-                        activity.type === "meeting" ? "Calendar" :
-                        activity.type === "task" ? "CheckSquare" :
+(activity.type_c || activity.type) === "call" ? "Phone" :
+                        (activity.type_c || activity.type) === "email" ? "Mail" :
+                        (activity.type_c || activity.type) === "meeting" ? "Calendar" :
+                        (activity.type_c || activity.type) === "task" ? "CheckSquare" :
                         "FileText"
                       }
                       className={`w-5 h-5 ${
-                        activity.type === "call" ? "text-blue-600" :
-                        activity.type === "email" ? "text-purple-600" :
-                        activity.type === "meeting" ? "text-green-600" :
-                        activity.type === "task" ? "text-yellow-600" :
+(activity.type_c || activity.type) === "call" ? "text-blue-600" :
+                        (activity.type_c || activity.type) === "email" ? "text-purple-600" :
+                        (activity.type_c || activity.type) === "meeting" ? "text-green-600" :
+                        (activity.type_c || activity.type) === "task" ? "text-yellow-600" :
                         "text-slate-600"
                       }`}
                     />
@@ -368,20 +370,20 @@ const Dashboard = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-medium text-slate-900">
-                        {activity.subject}
+{activity.subject_c || activity.subject}
                       </p>
                       <p className="text-xs text-slate-500">
-                        {format(new Date(activity.scheduledAt), "MMM dd, HH:mm")}
+{format(new Date(activity.scheduled_at_c || activity.scheduledAt), "MMM dd, HH:mm")}
                       </p>
                     </div>
                     <p className="text-sm text-slate-600 mt-1 line-clamp-2">
-                      {activity.description}
+{activity.description_c || activity.description}
                     </p>
                     <div className="flex items-center mt-2 space-x-4">
                       <span className="text-xs text-slate-500">
-                        by {activity.createdBy}
+by {activity.CreatedBy?.Name || activity.createdBy}
                       </span>
-                      {activity.completedAt && (
+{(activity.completed_at_c || activity.completedAt) && (
                         <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
                           Completed
                         </span>

@@ -1,16 +1,16 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import ApperIcon from "@/components/ApperIcon";
-import Button from "@/components/atoms/Button";
-import Input from "@/components/atoms/Input";
-import StatusBadge from "@/components/molecules/StatusBadge";
-import Loading from "@/components/ui/Loading";
-import Error from "@/components/ui/Error";
-import Empty from "@/components/ui/Empty";
+import React, { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { dealsService } from "@/services/api/dealsService";
 import { leadsService } from "@/services/api/leadsService";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
+import ApperIcon from "@/components/ApperIcon";
+import Button from "@/components/atoms/Button";
+import Input from "@/components/atoms/Input";
+import StatusBadge from "@/components/molecules/StatusBadge";
+import Error from "@/components/ui/Error";
+import Empty from "@/components/ui/Empty";
+import Loading from "@/components/ui/Loading";
 
 const Deals = () => {
   const [deals, setDeals] = useState([]);
@@ -110,9 +110,9 @@ const Deals = () => {
     }
 
     try {
-      const updatedDeal = await dealsService.update(draggedDeal.Id, { 
+const updatedDeal = await dealsService.update(draggedDeal.Id, { 
         stage: newStage,
-        probability: newStage === "closed_won" ? 100 : newStage === "closed_lost" ? 0 : draggedDeal.probability
+        probability: newStage === "closed_won" ? 100 : newStage === "closed_lost" ? 0 : (draggedDeal.probability_c || draggedDeal.probability)
       });
       
       setDeals(prev => prev.map(deal => 
@@ -127,18 +127,20 @@ const Deals = () => {
     }
   };
 
-  const getLeadName = (leadId) => {
+const getLeadName = (leadId) => {
     const lead = leads.find(l => l.Id === parseInt(leadId));
-    return lead ? lead.name : "Unknown Lead";
+    if (!lead) return "Unknown Lead";
+    return lead.name_c || lead.name || "Unnamed Lead";
   };
 
   const getLeadCompany = (leadId) => {
     const lead = leads.find(l => l.Id === parseInt(leadId));
-    return lead ? lead.company : "Unknown Company";
+    if (!lead) return "Unknown Company";
+    return lead.company_c || lead.company || "No Company";
   };
 
   const getStageDeals = (stageId) => {
-    return deals.filter(deal => deal.stage === stageId);
+return deals.filter(deal => (deal.stage_c || deal.stage) === stageId);
   };
 
   const getTotalValue = (stageId) => {
@@ -221,32 +223,32 @@ const Deals = () => {
                       draggable
                       onDragStart={(e) => handleDragStart(e, deal)}
                       className="bg-slate-50 rounded-lg p-4 cursor-move hover:shadow-md transition-all duration-200 border border-slate-100 hover:border-slate-200"
-                      onClick={() => setSelectedDeal(deal)}
+onClick={() => setSelectedDeal(deal)}
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="w-8 h-8 bg-gradient-to-r from-accent-500 to-accent-600 rounded-lg flex items-center justify-center text-white text-sm font-medium">
-                          {getLeadCompany(deal.leadId).charAt(0).toUpperCase()}
+                          {getLeadCompany(deal.lead_id_c?.Id || deal.leadId).charAt(0).toUpperCase()}
                         </div>
                         <span className="text-xs text-slate-500">
-                          {deal.probability}%
+{deal.probability_c || deal.probability}%
                         </span>
                       </div>
                       
                       <h4 className="font-medium text-slate-900 text-sm mb-1 line-clamp-2">
-                        {deal.title}
+{deal.title_c || deal.title}
                       </h4>
                       
-                      <p className="text-xs text-slate-600 mb-2">
-                        {getLeadName(deal.leadId)} • {getLeadCompany(deal.leadId)}
+<p className="text-xs text-slate-600 mb-2">
+                        {getLeadName(deal.lead_id_c?.Id || deal.leadId)} • {getLeadCompany(deal.lead_id_c?.Id || deal.leadId)}
                       </p>
                       
-                      <div className="flex items-center justify-between">
+<div className="flex items-center justify-between">
                         <span className="text-lg font-bold text-accent-600">
-                          ${(deal.value / 1000).toFixed(0)}K
+                          ${(deal.value_c || deal.value || 0).toLocaleString()}
                         </span>
-                        {deal.expectedCloseDate && (
+                        {(deal.expected_close_date_c || deal.expectedCloseDate) && (
                           <span className="text-xs text-slate-500">
-                            {format(new Date(deal.expectedCloseDate), "MMM dd")}
+                            {format(new Date(deal.expected_close_date_c || deal.expectedCloseDate), "MMM dd")}
                           </span>
                         )}
                       </div>
@@ -255,7 +257,7 @@ const Deals = () => {
                       <div className="w-full bg-slate-200 rounded-full h-1.5 mt-3">
                         <div
                           className="bg-gradient-to-r from-accent-500 to-accent-600 h-1.5 rounded-full transition-all duration-300"
-                          style={{ width: `${deal.probability}%` }}
+                          style={{ width: `${deal.probability_c || deal.probability}%` }}
                         ></div>
                       </div>
                     </motion.div>
@@ -312,9 +314,9 @@ const Deals = () => {
                         className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       >
                         <option value="">Select a lead</option>
-                        {leads.map(lead => (
+{leads.map(lead => (
                           <option key={lead.Id} value={lead.Id}>
-                            {lead.name} - {lead.company}
+                            {(lead.name_c || lead.name || 'Unnamed Lead')} - {(lead.company_c || lead.company || 'No Company')}
                           </option>
                         ))}
                       </select>
@@ -425,9 +427,9 @@ const Deals = () => {
                         <ApperIcon name="TrendingUp" className="w-6 h-6" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-semibold text-slate-900">{selectedDeal.title}</h3>
+<h3 className="text-xl font-semibold text-slate-900">{selectedDeal.title_c || selectedDeal.title}</h3>
                         <p className="text-slate-600">
-                          {getLeadName(selectedDeal.leadId)} • {getLeadCompany(selectedDeal.leadId)}
+                          {getLeadName(selectedDeal.lead_id_c?.Id || selectedDeal.leadId)} • {getLeadCompany(selectedDeal.lead_id_c?.Id || selectedDeal.leadId)}
                         </p>
                       </div>
                     </div>
@@ -446,22 +448,22 @@ const Deals = () => {
                       <h4 className="text-sm font-semibold text-slate-900 mb-3">Deal Information</h4>
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-sm text-slate-600">Stage:</span>
-                          <StatusBadge status={selectedDeal.stage} type="deal" />
+<span className="text-sm text-slate-600">Stage:</span>
+                          <StatusBadge status={selectedDeal.stage_c || selectedDeal.stage} type="deal" />
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm text-slate-600">Value:</span>
-                          <span className="text-sm font-medium">${selectedDeal.value?.toLocaleString() || 0}</span>
+<span className="text-sm text-slate-600">Value:</span>
+                          <span className="text-sm font-medium">${(selectedDeal.value_c || selectedDeal.value || 0).toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm text-slate-600">Probability:</span>
-                          <span className="text-sm font-medium">{selectedDeal.probability}%</span>
+<span className="text-sm text-slate-600">Probability:</span>
+                          <span className="text-sm font-medium">{selectedDeal.probability_c || selectedDeal.probability}%</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm text-slate-600">Expected Close:</span>
+<span className="text-sm text-slate-600">Expected Close:</span>
                           <span className="text-sm font-medium">
-                            {selectedDeal.expectedCloseDate 
-                              ? format(new Date(selectedDeal.expectedCloseDate), "MMM dd, yyyy")
+                            {(selectedDeal.expected_close_date_c || selectedDeal.expectedCloseDate) 
+                              ? format(new Date(selectedDeal.expected_close_date_c || selectedDeal.expectedCloseDate), "MMM dd, yyyy")
                               : "Not set"
                             }
                           </span>
@@ -473,30 +475,30 @@ const Deals = () => {
                       <h4 className="text-sm font-semibold text-slate-900 mb-3">Assignment</h4>
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-sm text-slate-600">Assigned to:</span>
-                          <span className="text-sm font-medium">{selectedDeal.assignedTo}</span>
+<span className="text-sm text-slate-600">Assigned to:</span>
+                          <span className="text-sm font-medium">{selectedDeal.assigned_to_c || selectedDeal.assignedTo}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-slate-600">Created:</span>
-                          <span className="text-sm font-medium">
-                            {format(new Date(selectedDeal.createdAt), "MMM dd, yyyy")}
+<span className="text-sm font-medium">
+                            {format(new Date(selectedDeal.CreatedOn || selectedDeal.createdAt), "MMM dd, yyyy")}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-slate-600">Last Updated:</span>
-                          <span className="text-sm font-medium">
-                            {format(new Date(selectedDeal.updatedAt), "MMM dd, yyyy")}
+<span className="text-sm font-medium">
+                            {format(new Date(selectedDeal.ModifiedOn || selectedDeal.updatedAt), "MMM dd, yyyy")}
                           </span>
                         </div>
                       </div>
                     </div>
                   </div>
                   
-                  {selectedDeal.notes && (
+{(selectedDeal.notes_c || selectedDeal.notes) && (
                     <div>
                       <h4 className="text-sm font-semibold text-slate-900 mb-3">Notes</h4>
                       <div className="p-3 bg-slate-50 rounded-lg">
-                        <p className="text-sm text-slate-600">{selectedDeal.notes}</p>
+                        <p className="text-sm text-slate-600">{selectedDeal.notes_c || selectedDeal.notes}</p>
                       </div>
                     </div>
                   )}

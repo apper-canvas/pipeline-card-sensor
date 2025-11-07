@@ -1,10 +1,14 @@
 import { NavLink } from "react-router-dom";
-import { useState } from "react";
+import React, { useState } from "react";
+import { useAuth } from "@/layouts/Root";
+import { useSelector } from "react-redux";
 import ApperIcon from "@/components/ApperIcon";
 import SearchBar from "@/components/molecules/SearchBar";
 
 const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { logout } = useAuth();
+  const { user, isAuthenticated } = useSelector(state => state.user);
 
   const navigationItems = [
     { name: "Dashboard", path: "/", icon: "LayoutDashboard" },
@@ -66,6 +70,37 @@ const Header = () => {
                   3
                 </span>
               </button>
+
+              {/* User Menu / Logout */}
+              {isAuthenticated && user ? (
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-slate-700 hidden md:inline">
+                    {user.firstName || user.name || user.emailAddress}
+                  </span>
+                  <button
+                    onClick={logout}
+                    className="p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Logout"
+                  >
+                    <ApperIcon name="LogOut" className="w-5 h-5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <NavLink
+                    to="/login"
+                    className="text-sm font-medium text-slate-600 hover:text-primary-600"
+                  >
+                    Login
+                  </NavLink>
+                  <NavLink
+                    to="/signup"
+                    className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
+                  >
+                    Sign Up
+                  </NavLink>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -90,6 +125,15 @@ const Header = () => {
                 {item.name}
               </NavLink>
             ))}
+            {isAuthenticated && (
+              <button
+                onClick={logout}
+                className="flex flex-col items-center px-3 py-2 text-xs font-medium text-slate-600"
+              >
+                <ApperIcon name="LogOut" className="w-5 h-5 mb-1" />
+                Logout
+              </button>
+            )}
           </nav>
         </div>
       </header>

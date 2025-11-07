@@ -28,11 +28,11 @@ const EmailTemplateModal = ({ isOpen, onClose, template = null, onSave }) => {
   useEffect(() => {
     if (template) {
       setFormData({
-        name: template.name,
-        category: template.category,
-        subject: template.subject,
-        content: template.content,
-        description: template.description
+name: template.name_c || template.name,
+        category: template.category_c || template.category,
+        subject: template.subject_c || template.subject,
+        content: template.content_c || template.content,
+        description: template.description_c || template.description
       });
     } else {
       setFormData({

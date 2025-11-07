@@ -3,9 +3,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { leadsService } from "@/services/api/leadsService";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
+import App from "@/App";
 import ApperIcon from "@/components/ApperIcon";
 import Button from "@/components/atoms/Button";
 import Input from "@/components/atoms/Input";
+import Dashboard from "@/components/pages/Dashboard";
 import EmailComposerModal from "@/components/molecules/EmailComposerModal";
 import EmailTemplateModal from "@/components/molecules/EmailTemplateModal";
 import StatusBadge from "@/components/molecules/StatusBadge";
@@ -52,24 +54,24 @@ const [newLead, setNewLead] = useState({
     fundingType: "",
     edition: "",
     salesRep: ""
-  });
+});
 
   const initializeEditLead = (lead) => {
     setEditLead({
-      name: lead.name || "",
-      company: lead.company || "",
-      source: lead.source || "Website",
-      status: lead.status || "connected",
-      value: lead.value?.toString() || "",
-      notes: lead.notes || "",
-      websiteUrl: lead.websiteUrl || "",
-      teamSize: lead.teamSize?.toString() || "",
-      arr: lead.arr?.toString() || "",
-      category: lead.category || "",
-      linkedinUrl: lead.linkedinUrl || "",
-      fundingType: lead.fundingType || "",
-      edition: lead.edition || "",
-      salesRep: lead.salesRep || ""
+      name: lead.name_c || lead.name || "",
+      company: lead.company_c || lead.company || "",
+      source: lead.source_c || lead.source || "Website",
+      status: lead.status_c || lead.status || "connected",
+      value: (lead.value_c || lead.value)?.toString() || "",
+      notes: lead.notes_c || lead.notes || "",
+      websiteUrl: lead.website_url_c || lead.websiteUrl || "",
+      teamSize: (lead.team_size_c || lead.teamSize)?.toString() || "",
+      arr: (lead.arr_c || lead.arr)?.toString() || "",
+      category: lead.category_c || lead.category || "",
+      linkedinUrl: lead.linkedin_url_c || lead.linkedinUrl || "",
+      fundingType: lead.funding_type_c || lead.fundingType || "",
+      edition: lead.edition_c || lead.edition || "",
+      salesRep: lead.sales_rep_c || lead.salesRep || ""
     });
   };
 
@@ -164,20 +166,20 @@ const editionOptions = [
 
     // Apply search filter
 if (searchTerm) {
-      filtered = filtered.filter(lead =>
-        lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.company.toLowerCase().includes(searchTerm.toLowerCase())
+filtered = filtered.filter(lead =>
+        (lead.name_c || lead.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (lead.company_c || lead.company || '').toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // Apply status filter
+// Apply status filter
     if (statusFilter !== "all") {
-      filtered = filtered.filter(lead => lead.status === statusFilter);
+      filtered = filtered.filter(lead => (lead.status_c || lead.status) === statusFilter);
     }
 
     // Apply source filter
     if (sourceFilter !== "all") {
-      filtered = filtered.filter(lead => lead.source === sourceFilter);
+      filtered = filtered.filter(lead => (lead.source_c || lead.source) === sourceFilter);
     }
 
     setFilteredLeads(filtered);
@@ -245,16 +247,17 @@ const handleAddLead = async (e) => {
 
 const handleStatusUpdate = async (leadId, newStatus) => {
     try {
-      const updatedLead = await leadsService.update(leadId, { 
+const updatedLead = await leadsService.update(leadId, { 
         status: newStatus,
         lastContactedAt: newStatus !== "new" ? new Date().toISOString() : null
       });
       
-      setLeads(prev => prev.map(lead => 
-        lead.Id === leadId ? updatedLead : lead
-      ));
-      
-      toast.success("Lead status updated!");
+      if (updatedLead) {
+setLeads(prev => prev.map(lead => 
+          lead.Id === leadId ? updatedLead : lead
+        ));
+        toast.success("Lead status updated successfully!");
+      }
     } catch (err) {
       toast.error(err.message || "Failed to update lead status");
     }
@@ -294,7 +297,7 @@ const handleCellEdit = (leadId, field, currentValue) => {
         }
       }
       
-      const updatedLead = await leadsService.update(leadId, { 
+const updatedLead = await leadsService.update(leadId, {
         [field]: valueToSave 
       });
       
@@ -503,7 +506,7 @@ className="hover:bg-slate-50 transition-colors"
                           <div className="min-w-0 flex-1">
                         <div className="flex items-center">
                           <div className="w-8 h-8 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-medium text-xs">
-                            {lead.name.split(" ").map(n => n[0]).join("").toUpperCase()}
+{(lead.name_c || lead.name || 'N').split(" ").map(n => n[0]).join("").toUpperCase()}
                           </div>
                           <div className="ml-2">
                             {editingCell === `${lead.Id}-name` ? (
@@ -534,10 +537,10 @@ className="hover:bg-slate-50 transition-colors"
                                 className="text-xs font-medium text-slate-900 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleCellEdit(lead.Id, 'name', lead.name);
+handleCellEdit(lead.Id, 'name', lead.name_c || lead.name);
                                 }}
                               >
-                                {lead.name}
+                                {lead.name_c || lead.name}
                               </p>
                             )}
                           </div>
@@ -574,11 +577,11 @@ className="hover:bg-slate-50 transition-colors"
                             <p 
                               className="text-xs font-medium text-slate-900 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded"
                               onClick={(e) => {
-                                e.stopPropagation();
-                                handleCellEdit(lead.Id, 'company', lead.company);
+e.stopPropagation();
+                                handleCellEdit(lead.Id, 'company', lead.company_c || lead.company);
                               }}
                             >
-                              {lead.company}
+                              {lead.company_c || lead.company}
                             </p>
                           )}
                         </div>
@@ -612,18 +615,18 @@ className="hover:bg-slate-50 transition-colors"
                           </div>
                         ) : (
                           <div 
-                            className="cursor-pointer group flex items-center"
-                            onDoubleClick={() => handleCellEdit(lead.Id, 'websiteUrl', lead.websiteUrl)}
+className="cursor-pointer group flex items-center"
+                            onDoubleClick={() => handleCellEdit(lead.Id, 'websiteUrl', lead.website_url_c || lead.websiteUrl)}
                           >
-                            {lead.websiteUrl ? (
-                              <a 
-                                href={lead.websiteUrl} 
+                            {(lead.website_url_c || lead.websiteUrl) ? (
+                              <a
+href={lead.website_url_c || lead.websiteUrl} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="text-xs text-primary-600 hover:text-primary-800 underline truncate max-w-24 block"
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                {lead.websiteUrl.replace(/^https?:\/\//, '')}
+                                {(lead.website_url_c || lead.websiteUrl).replace(/^https?:\/\//, '')}
                               </a>
                             ) : (
                               <span className="text-xs text-gray-400">N/A</span>
@@ -663,12 +666,12 @@ className="hover:bg-slate-50 transition-colors"
                           </div>
                         ) : (
                           <div 
-                            className="cursor-pointer group flex items-center"
-                            onDoubleClick={() => handleCellEdit(lead.Id, 'linkedinUrl', lead.linkedinUrl)}
+className="cursor-pointer group flex items-center"
+                            onDoubleClick={() => handleCellEdit(lead.Id, 'linkedinUrl', lead.linkedin_url_c || lead.linkedinUrl)}
                           >
-                            {lead.linkedinUrl ? (
-                              <a 
-                                href={lead.linkedinUrl} 
+                            {(lead.linkedin_url_c || lead.linkedinUrl) ? (
+                              <a
+href={lead.linkedin_url_c || lead.linkedinUrl} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="text-xs text-primary-600 hover:text-primary-800 underline truncate max-w-24 block"
@@ -714,11 +717,11 @@ className="hover:bg-slate-50 transition-colors"
                           <span 
                             className="text-xs text-slate-900 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded"
                             onClick={(e) => {
-                              e.stopPropagation();
-                              handleCellEdit(lead.Id, 'teamSize', lead.teamSize);
+e.stopPropagation();
+                              handleCellEdit(lead.Id, 'teamSize', lead.team_size_c || lead.teamSize);
                             }}
                           >
-                            {lead.teamSize || 'N/A'}
+                            {(lead.team_size_c || lead.teamSize) || 'N/A'}
                           </span>
                         )}
                       </td>
@@ -750,12 +753,12 @@ className="hover:bg-slate-50 transition-colors"
                         ) : (
                           <span 
                             className="text-xs font-medium text-slate-900 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCellEdit(lead.Id, 'arr', lead.arr);
+e.stopPropagation();
+                              handleCellEdit(lead.Id, 'arr', lead.arr_c || lead.arr);
                             }}
                           >
-                            ${lead.arr?.toLocaleString() || 'N/A'}
+                            ${(lead.arr_c || lead.arr)?.toLocaleString() || 'N/A'}
+${(lead.arr_c || lead.arr)?.toLocaleString() || 'N/A'}
                           </span>
                         )}
                       </td>
@@ -793,12 +796,12 @@ className="hover:bg-slate-50 transition-colors"
                         ) : (
                           <span 
                             className="text-xs text-slate-600 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCellEdit(lead.Id, 'category', lead.category);
+e.stopPropagation();
+                              handleCellEdit(lead.Id, 'category', lead.category_c || lead.category);
                             }}
                           >
-                            {lead.category || 'N/A'}
+                            {(lead.category_c || lead.category) || 'N/A'}
+                          </span>
                           </span>
                         )}
                       </td>
@@ -836,12 +839,12 @@ className="hover:bg-slate-50 transition-colors"
                         ) : (
                           <span 
                             className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 cursor-pointer hover:bg-green-200"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCellEdit(lead.Id, 'edition', lead.edition);
+e.stopPropagation();
+                              handleCellEdit(lead.Id, 'edition', lead.edition_c || lead.edition);
                             }}
                           >
-                            {lead.edition || 'N/A'}
+                            {lead.edition_c || lead.edition || 'N/A'}
+{lead.edition_c || lead.edition || 'N/A'}
                           </span>
                         )}
                       </td>
@@ -879,18 +882,18 @@ className="hover:bg-slate-50 transition-colors"
                         ) : (
                           <span 
                             className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 cursor-pointer hover:bg-blue-200"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCellEdit(lead.Id, 'fundingType', lead.fundingType);
+e.stopPropagation();
+                              handleCellEdit(lead.Id, 'fundingType', lead.funding_type_c || lead.fundingType);
                             }}
                           >
-                            {lead.fundingType || 'N/A'}
+                            {lead.funding_type_c || lead.fundingType || 'N/A'}
+{lead.funding_type_c || lead.fundingType || 'N/A'}
                           </span>
                         )}
                       </td>
                       <td className="px-4 py-4">
                         <select
-                          value={lead.status}
+value={lead.status_c || lead.status}
                           onChange={(e) => {
                             e.stopPropagation();
                             handleStatusUpdate(lead.Id, e.target.value);
@@ -898,35 +901,25 @@ className="hover:bg-slate-50 transition-colors"
                           onClick={(e) => e.stopPropagation()}
                           className="text-xs border-0 bg-transparent focus:ring-0 focus:outline-none cursor-pointer"
                         >
-                          <option value="connected">Connected</option>
-                          <option value="locked">Locked</option>
-                          <option value="meeting-booked">Meeting Booked</option>
+                          <option value="new">New</option>
+                          <option value="contacted">Contacted</option>
+                          <option value="qualified">Qualified</option>
+                          <option value="unqualified">Unqualified</option>
                           <option value="meeting-done">Meeting Done</option>
-                          <option value="negotiation">Negotiation</option>
-                          <option value="closed">Closed</option>
-                          <option value="lost">Lost</option>
-                          <option value="launched-appsumo">Launched on AppSumo</option>
-                          <option value="launched-prime">Launched on Prime Club</option>
-                          <option value="keep-eye">Keep an Eye</option>
-                          <option value="rejected">Rejected</option>
-                          <option value="unsubscribed">Unsubscribed</option>
-                          <option value="outdated">Outdated</option>
-                          <option value="hotlist">Hotlist</option>
-                          <option value="out-of-league">Out of League</option>
                         </select>
-                        <StatusBadge status={lead.status} type="lead" />
+                        <StatusBadge status={lead.status_c || lead.status} type="lead" />
                       </td>
                       <td className="px-4 py-4">
                         <span className="text-xs text-slate-600">
-                          {lead.lastContactedAt 
-                            ? format(new Date(lead.lastContactedAt), "MMM dd, yyyy")
+{(lead.last_contacted_at_c || lead.lastContactedAt) 
+                            ? format(new Date(lead.last_contacted_at_c || lead.lastContactedAt), "MMM dd, yyyy")
                             : "Never"
                           }
                         </span>
                       </td>
                       <td className="px-4 py-4">
-                        <span className="text-xs font-medium text-slate-900">
-                          {lead.assignedTo || "Unassigned"}
+<span className="text-xs font-medium text-slate-900">
+                          {(lead.sales_rep_c || lead.salesRep) || "Unassigned"}
                         </span>
                       </td>
                       <td className="px-4 py-4">
@@ -966,12 +959,12 @@ className="hover:bg-slate-50 transition-colors"
                           <div 
                             className="text-xs text-slate-600 max-w-32 cursor-pointer hover:bg-slate-100 px-2 py-1 rounded leading-relaxed whitespace-pre-wrap" 
                             title={lead.notes}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCellEdit(lead.Id, 'notes', lead.notes);
+e.stopPropagation();
+                              handleCellEdit(lead.Id, 'notes', lead.notes_c || lead.notes);
                             }}
                           >
-                            {lead.notes || "No notes"}
+                            {(lead.notes_c || lead.notes) || "No notes"}
+{(lead.notes_c || lead.notes) || "No notes"}
                           </div>
                         )}
                       </td>
@@ -1800,12 +1793,12 @@ className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-20
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <div className="w-12 h-12 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-medium">
-                        {selectedLead.name.split(" ").map(n => n[0]).join("").toUpperCase()}
+{(selectedLead.name_c || selectedLead.name || 'N').split(" ").map(n => n[0]).join("").toUpperCase()}
                       </div>
 <div>
-                        <h3 className="text-xl font-semibold text-slate-900">{selectedLead.name}</h3>
-                        <p className="text-slate-600">{selectedLead.company}</p>
-                      </div>
+                          <h3 className="text-xl font-semibold text-slate-900">{selectedLead.name_c || selectedLead.name}</h3>
+                          <p className="text-slate-600">{selectedLead.company_c || selectedLead.company}</p>
+                        </div>
                     </div>
                     <button
                       onClick={() => setSelectedLead(null)}
@@ -1821,16 +1814,16 @@ className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-20
                     <div>
                       <h4 className="text-sm font-semibold text-slate-900 mb-3">Contact Information</h4>
                       <div className="space-y-2">
-                        {selectedLead.email && (
+{(selectedLead.email_c || selectedLead.email) && (
                           <div className="flex justify-between">
                             <span className="text-sm text-slate-600">Email:</span>
-                            <span className="text-sm font-medium text-blue-600">{selectedLead.email}</span>
+                            <span className="text-sm font-medium text-blue-600">{selectedLead.email_c || selectedLead.email}</span>
                           </div>
                         )}
-                        {selectedLead.phone && (
+{(selectedLead.phone_c || selectedLead.phone) && (
                           <div className="flex justify-between">
                             <span className="text-sm text-slate-600">Phone:</span>
-                            <span className="text-sm font-medium">{selectedLead.phone}</span>
+                            <span className="text-sm font-medium">{selectedLead.phone_c || selectedLead.phone}</span>
                           </div>
                         )}
                         {selectedLead.address && (
@@ -1846,15 +1839,15 @@ className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-20
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-sm text-slate-600">Status:</span>
-                          <StatusBadge status={selectedLead.status} type="lead" />
+<StatusBadge status={selectedLead.status_c || selectedLead.status} type="lead" />
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-slate-600">Source:</span>
-                          <span className="text-sm font-medium">{selectedLead.source}</span>
+<span className="text-sm font-medium">{selectedLead.source_c || selectedLead.source}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-slate-600">Value:</span>
-                          <span className="text-sm font-medium">${selectedLead.value?.toLocaleString() || 0}</span>
+<span className="text-sm font-medium">${(selectedLead.value_c || selectedLead.value || 0).toLocaleString()}</span>
                         </div>
                         {selectedLead.priority && (
                           <div className="flex justify-between">
@@ -1866,19 +1859,19 @@ className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-20
                             }`}>{selectedLead.priority}</span>
                           </div>
                         )}
-                        {selectedLead.createdAt && (
+{(selectedLead.CreatedOn || selectedLead.createdAt) && (
                           <div className="flex justify-between">
                             <span className="text-sm text-slate-600">Created:</span>
                             <span className="text-sm font-medium">
-                              {new Date(selectedLead.createdAt).toLocaleDateString()}
+                              {new Date(selectedLead.CreatedOn || selectedLead.createdAt).toLocaleDateString()}
                             </span>
                           </div>
                         )}
-                        {selectedLead.lastContact && (
+{(selectedLead.last_contacted_at_c || selectedLead.lastContact) && (
                           <div className="flex justify-between">
                             <span className="text-sm text-slate-600">Last Contact:</span>
                             <span className="text-sm font-medium">
-                              {new Date(selectedLead.lastContact).toLocaleDateString()}
+                              {new Date(selectedLead.last_contacted_at_c || selectedLead.lastContact).toLocaleDateString()}
                             </span>
                           </div>
                         )}
@@ -1886,11 +1879,11 @@ className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-20
                     </div>
                   </div>
                   
-                  {selectedLead.notes && (
+{(selectedLead.notes_c || selectedLead.notes) && (
                     <div className="mt-6">
                       <h4 className="text-sm font-semibold text-slate-900 mb-3">Notes</h4>
                       <div className="p-3 bg-slate-50 rounded-lg">
-                        <p className="text-sm text-slate-600 whitespace-pre-wrap">{selectedLead.notes}</p>
+                        <p className="text-sm text-slate-600 whitespace-pre-wrap">{selectedLead.notes_c || selectedLead.notes}</p>
                       </div>
                     </div>
                   )}

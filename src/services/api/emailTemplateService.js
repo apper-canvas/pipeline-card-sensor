@@ -1,66 +1,235 @@
-import emailTemplatesData from "@/services/mockData/emailTemplates.json";
-
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+import { getApperClient } from "@/services/apperClient";
+import { toast } from "react-toastify";
 
 export const emailTemplateService = {
   async getAll() {
-    await delay(200);
-    return [...emailTemplatesData];
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        console.error("ApperClient not initialized");
+        return [];
+      }
+
+      const params = {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "name_c"}},
+          {"field": {"Name": "category_c"}},
+          {"field": {"Name": "subject_c"}},
+          {"field": {"Name": "content_c"}},
+          {"field": {"Name": "description_c"}},
+          {"field": {"Name": "CreatedOn"}},
+          {"field": {"Name": "ModifiedOn"}}
+        ]
+      };
+
+      const response = await apperClient.fetchRecords('email_template_c', params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        return [];
+      }
+
+      return response.data || [];
+    } catch (error) {
+      console.error("Error fetching email templates:", error?.response?.data?.message || error);
+      return [];
+    }
   },
 
   async getById(id) {
-    await delay(150);
-    const template = emailTemplatesData.find(item => item.Id === parseInt(id));
-    if (!template) {
-      throw new Error("Email template not found");
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        console.error("ApperClient not initialized");
+        return null;
+      }
+
+      const params = {
+        fields: [
+          {"field": {"Name": "Name"}},
+          {"field": {"Name": "name_c"}},
+          {"field": {"Name": "category_c"}},
+          {"field": {"Name": "subject_c"}},
+          {"field": {"Name": "content_c"}},
+          {"field": {"Name": "description_c"}}
+        ]
+      };
+
+      const response = await apperClient.getRecordById('email_template_c', id, params);
+
+      if (!response.success) {
+        console.error(response.message);
+        return null;
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching email template ${id}:`, error?.response?.data?.message || error);
+      return null;
     }
-    return { ...template };
   },
 
   async create(templateData) {
-    await delay(300);
-    const newTemplate = {
-      ...templateData,
-      Id: Math.max(...emailTemplatesData.map(item => item.Id), 0) + 1,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    emailTemplatesData.push(newTemplate);
-    return { ...newTemplate };
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        console.error("ApperClient not initialized");
+        return null;
+      }
+
+      // Only include Updateable fields
+      const createData = {
+        Name: templateData.name_c || templateData.name,
+        name_c: templateData.name_c || templateData.name,
+        category_c: templateData.category_c || templateData.category,
+        subject_c: templateData.subject_c || templateData.subject,
+        content_c: templateData.content_c || templateData.content,
+        description_c: templateData.description_c || templateData.description
+      };
+
+      // Remove null/undefined values
+      Object.keys(createData).forEach(key => {
+        if (createData[key] === null || createData[key] === undefined || createData[key] === '') {
+          delete createData[key];
+        }
+      });
+
+      const params = {
+        records: [createData]
+      };
+
+      const response = await apperClient.createRecord('email_template_c', params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        return null;
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success);
+        const failed = response.results.filter(r => !r.success);
+
+        if (failed.length > 0) {
+          console.error(`Failed to create ${failed.length} records:`, failed);
+          failed.forEach(record => {
+            if (record.message) toast.error(record.message);
+          });
+        }
+
+        return successful.length > 0 ? successful[0].data : null;
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error creating email template:", error?.response?.data?.message || error);
+      return null;
+    }
   },
 
   async update(id, updates) {
-    await delay(250);
-    const index = emailTemplatesData.findIndex(item => item.Id === parseInt(id));
-    if (index === -1) {
-      throw new Error("Email template not found");
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        console.error("ApperClient not initialized");
+        return null;
+      }
+
+      // Only include Updateable fields
+      const updateData = { Id: parseInt(id) };
+
+      // Map old field names to new ones
+      const fieldMapping = {
+        name: 'name_c',
+        category: 'category_c',
+        subject: 'subject_c',
+        content: 'content_c',
+        description: 'description_c'
+      };
+
+      Object.keys(updates).forEach(key => {
+        const dbField = fieldMapping[key] || key;
+        
+        if (updates[key] !== null && updates[key] !== undefined && updates[key] !== '') {
+          updateData[dbField] = updates[key];
+        }
+      });
+
+      // Update Name field if name_c is being updated
+      if (updateData.name_c) {
+        updateData.Name = updateData.name_c;
+      }
+
+      const params = {
+        records: [updateData]
+      };
+
+      const response = await apperClient.updateRecord('email_template_c', params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        return null;
+      }
+
+      if (response.results) {
+        const successful = response.results.filter(r => r.success);
+        const failed = response.results.filter(r => !r.success);
+
+        if (failed.length > 0) {
+          console.error(`Failed to update ${failed.length} records:`, failed);
+          failed.forEach(record => {
+            if (record.message) toast.error(record.message);
+          });
+        }
+
+        return successful.length > 0 ? successful[0].data : null;
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error updating email template:", error?.response?.data?.message || error);
+      return null;
     }
-    
-    emailTemplatesData[index] = {
-      ...emailTemplatesData[index],
-      ...updates,
-      Id: parseInt(id),
-      updatedAt: new Date().toISOString()
-    };
-    
-    return { ...emailTemplatesData[index] };
   },
 
   async delete(id) {
-    await delay(200);
-    const index = emailTemplatesData.findIndex(item => item.Id === parseInt(id));
-    if (index === -1) {
-      throw new Error("Email template not found");
+    try {
+      const apperClient = getApperClient();
+      if (!apperClient) {
+        console.error("ApperClient not initialized");
+        return false;
+      }
+
+      const params = {
+        RecordIds: [parseInt(id)]
+      };
+
+      const response = await apperClient.deleteRecord('email_template_c', params);
+
+      if (!response.success) {
+        console.error(response.message);
+        toast.error(response.message);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Error deleting email template:", error?.response?.data?.message || error);
+      return false;
     }
-    
-    const deletedTemplate = emailTemplatesData[index];
-    emailTemplatesData.splice(index, 1);
-    return { ...deletedTemplate };
   },
 
   async getByCategory(category) {
-    await delay(150);
-    return emailTemplatesData.filter(template => template.category === category).map(template => ({ ...template }));
+    try {
+      const templates = await this.getAll();
+      return templates.filter(template => (template.category_c || template.category) === category);
+    } catch (error) {
+      console.error("Error getting templates by category:", error);
+      return [];
+    }
   },
 
   // Helper function to replace variables in template content

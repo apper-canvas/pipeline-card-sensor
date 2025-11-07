@@ -141,7 +141,7 @@ const EmailComposerModal = ({ isOpen, onClose, selectedLead }) => {
                   </h3>
                   {selectedLead && (
                     <p className="text-sm text-slate-600">
-                      To: {selectedLead.name} ({selectedLead.email})
+To: {selectedLead.name_c || selectedLead.name} ({selectedLead.email_c || selectedLead.email})
                     </p>
                   )}
                 </div>
@@ -275,10 +275,10 @@ const EmailComposerModal = ({ isOpen, onClose, selectedLead }) => {
                     <div className="p-6 border-t border-slate-200">
                       <div className="flex justify-between items-center">
                         <div className="text-sm text-slate-500">
-                          {selectedTemplate && (
+{selectedTemplate && (
                             <span className="flex items-center">
                               <ApperIcon name="FileText" className="w-4 h-4 mr-1" />
-                              Using template: {selectedTemplate.name}
+                              Using template: {selectedTemplate.name_c || selectedTemplate.name}
                             </span>
                           )}
                         </div>
