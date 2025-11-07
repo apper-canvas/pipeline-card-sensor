@@ -247,16 +247,13 @@ export const calendarService = {
       console.error("Error getting events by date range:", error);
       return [];
     }
-  },
+},
 
   async getByType(type) {
     try {
       const events = await this.getAll();
       return events.filter(event => (event.type_c || event.type) === type);
     } catch (error) {
-      console.error("Error getting events by type:", error);
-      return [];
-} catch (error) {
       console.error("Error getting events by type:", error);
       return [];
     }

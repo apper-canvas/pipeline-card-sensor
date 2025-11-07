@@ -535,9 +535,9 @@ className="hover:bg-slate-50 transition-colors"
                             ) : (
                               <p 
                                 className="text-xs font-medium text-slate-900 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded"
-                                onClick={(e) => {
+onClick={(e) => {
                                   e.stopPropagation();
-handleCellEdit(lead.Id, 'name', lead.name_c || lead.name);
+                                  handleCellEdit(lead.Id, 'name', lead.name_c || lead.name);
                                 }}
                               >
                                 {lead.name_c || lead.name}
@@ -576,8 +576,8 @@ handleCellEdit(lead.Id, 'name', lead.name_c || lead.name);
                           ) : (
                             <p 
                               className="text-xs font-medium text-slate-900 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded"
-                              onClick={(e) => {
-e.stopPropagation();
+onClick={(e) => {
+                                e.stopPropagation();
                                 handleCellEdit(lead.Id, 'company', lead.company_c || lead.company);
                               }}
                             >
@@ -715,9 +715,9 @@ href={lead.linkedin_url_c || lead.linkedinUrl}
                           </div>
                         ) : (
                           <span 
-                            className="text-xs text-slate-900 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded"
+className="text-xs text-slate-900 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded"
                             onClick={(e) => {
-e.stopPropagation();
+                              e.stopPropagation();
                               handleCellEdit(lead.Id, 'teamSize', lead.team_size_c || lead.teamSize);
                             }}
                           >
@@ -752,13 +752,13 @@ e.stopPropagation();
                           </div>
                         ) : (
                           <span 
-                            className="text-xs font-medium text-slate-900 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded"
-e.stopPropagation();
+className="text-xs font-medium text-slate-900 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded"
+                            onClick={(e) => {
+                              e.stopPropagation();
                               handleCellEdit(lead.Id, 'arr', lead.arr_c || lead.arr);
                             }}
                           >
                             ${(lead.arr_c || lead.arr)?.toLocaleString() || 'N/A'}
-${(lead.arr_c || lead.arr)?.toLocaleString() || 'N/A'}
                           </span>
                         )}
                       </td>
@@ -794,14 +794,14 @@ ${(lead.arr_c || lead.arr)?.toLocaleString() || 'N/A'}
                             </button>
                           </div>
                         ) : (
-                          <span 
+<span 
                             className="text-xs text-slate-600 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded"
-e.stopPropagation();
+                            onClick={(e) => {
+                              e.stopPropagation();
                               handleCellEdit(lead.Id, 'category', lead.category_c || lead.category);
                             }}
                           >
                             {(lead.category_c || lead.category) || 'N/A'}
-                          </span>
                           </span>
                         )}
                       </td>
@@ -839,12 +839,12 @@ e.stopPropagation();
                         ) : (
                           <span 
                             className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 cursor-pointer hover:bg-green-200"
-e.stopPropagation();
+onClick={(e) => {
+                              e.stopPropagation();
                               handleCellEdit(lead.Id, 'edition', lead.edition_c || lead.edition);
                             }}
                           >
                             {lead.edition_c || lead.edition || 'N/A'}
-{lead.edition_c || lead.edition || 'N/A'}
                           </span>
                         )}
                       </td>
@@ -882,12 +882,12 @@ e.stopPropagation();
                         ) : (
                           <span 
                             className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 cursor-pointer hover:bg-blue-200"
-e.stopPropagation();
+onClick={(e) => {
+                              e.stopPropagation();
                               handleCellEdit(lead.Id, 'fundingType', lead.funding_type_c || lead.fundingType);
                             }}
                           >
                             {lead.funding_type_c || lead.fundingType || 'N/A'}
-{lead.funding_type_c || lead.fundingType || 'N/A'}
                           </span>
                         )}
                       </td>
@@ -959,12 +959,12 @@ value={lead.status_c || lead.status}
                           <div 
                             className="text-xs text-slate-600 max-w-32 cursor-pointer hover:bg-slate-100 px-2 py-1 rounded leading-relaxed whitespace-pre-wrap" 
                             title={lead.notes}
-e.stopPropagation();
+onClick={(e) => {
+                              e.stopPropagation();
                               handleCellEdit(lead.Id, 'notes', lead.notes_c || lead.notes);
                             }}
                           >
                             {(lead.notes_c || lead.notes) || "No notes"}
-{(lead.notes_c || lead.notes) || "No notes"}
                           </div>
                         )}
                       </td>

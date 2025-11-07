@@ -338,9 +338,6 @@ export const leadsService = {
         bySource: sourceStats,
         overall: overallWinRate
       };
-    } catch (error) {
-      console.error("Error calculating win rate by source:", error);
-      return { bySource: {}, overall: 0 };
 } catch (error) {
       console.error("Error calculating win rate by source:", error);
       return { bySource: {}, overall: 0 };
