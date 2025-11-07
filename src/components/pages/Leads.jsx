@@ -1032,7 +1032,7 @@ className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-20
                 </div>
                 
 <form onSubmit={handleAddLead} className="flex flex-col h-full">
-<div className="flex-1 overflow-y-auto p-6 scrollbar-gutter-stable" style={{scrollbarWidth: 'thin'}}>
+<div className="flex-1 overflow-y-auto p-6" style={{scrollbarWidth: 'thin', scrollbarGutter: 'stable'}}>
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -1360,10 +1360,11 @@ className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-20
                         />
                       </div>
                     </div>
+</div>
                   </div>
                   
-                  <div className="flex-shrink-0 flex justify-end space-x-3 p-6 border-t border-slate-200 bg-white rounded-b-xl">
-                    <Button
+                </form>
+                <div className="flex-shrink-0 flex justify-end space-x-3 p-6 border-t border-slate-200 bg-white rounded-b-xl">
                       type="button"
                       variant="outline"
                       onClick={() => setShowAddModal(false)}
@@ -1405,8 +1406,8 @@ className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-20
                   <h3 className="text-lg font-semibold text-slate-900">Edit Lead</h3>
                 </div>
                 
-                <form onSubmit={handleEditLead} className="flex flex-col h-full">
-                  <div className="flex-1 overflow-y-auto p-6 scrollbar-gutter-stable" style={{scrollbarWidth: 'thin'}}>
+<form onSubmit={handleEditLead} className="flex flex-col h-full">
+                  <div className="flex-1 overflow-y-auto p-6" style={{scrollbarWidth: 'thin', scrollbarGutter: 'stable'}}>
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -1786,8 +1787,8 @@ className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-20
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                onClick={(e) => e.stopPropagation()}
-                className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto"
+onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-200 max-h-[90vh] flex flex-col"
               >
                 <div className="p-6 border-b border-slate-200">
                   <div className="flex items-center justify-between">
