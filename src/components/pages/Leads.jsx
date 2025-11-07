@@ -1,0 +1,1918 @@
+import React, { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { leadsService } from "@/services/api/leadsService";
+import { format } from "date-fns";
+import { toast } from "react-toastify";
+import ApperIcon from "@/components/ApperIcon";
+import Button from "@/components/atoms/Button";
+import Input from "@/components/atoms/Input";
+import EmailComposerModal from "@/components/molecules/EmailComposerModal";
+import EmailTemplateModal from "@/components/molecules/EmailTemplateModal";
+import StatusBadge from "@/components/molecules/StatusBadge";
+import Error from "@/components/ui/Error";
+import Empty from "@/components/ui/Empty";
+import Loading from "@/components/ui/Loading";
+const Leads = () => {
+  const [leads, setLeads] = useState([]);
+  const [filteredLeads, setFilteredLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sourceFilter, setSourceFilter] = useState("all");
+const [selectedLead, setSelectedLead] = useState(null);
+  const [showNewLeadModal, setShowNewLeadModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editLead, setEditLead] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showEmailComposer, setShowEmailComposer] = useState(false);
+  const [showEmailTemplate, setShowEmailTemplate] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [emailLead, setEmailLead] = useState(null);
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [editingCell, setEditingCell] = useState(null);
+  const [editingValue, setEditingValue] = useState("");
+  const [savingCell, setSavingCell] = useState(null);
+const [newLead, setNewLead] = useState({
+    name: "",
+    company: "",
+    source: "Website",
+    status: "connected",
+    value: "",
+    notes: "",
+    websiteUrl: "",
+    teamSize: "",
+    arr: "",
+    category: "",
+    linkedinUrl: "",
+    fundingType: "",
+    edition: "",
+    salesRep: ""
+  });
+
+  const initializeEditLead = (lead) => {
+    setEditLead({
+      name: lead.name || "",
+      company: lead.company || "",
+      source: lead.source || "Website",
+      status: lead.status || "connected",
+      value: lead.value?.toString() || "",
+      notes: lead.notes || "",
+      websiteUrl: lead.websiteUrl || "",
+      teamSize: lead.teamSize?.toString() || "",
+      arr: lead.arr?.toString() || "",
+      category: lead.category || "",
+      linkedinUrl: lead.linkedinUrl || "",
+      fundingType: lead.fundingType || "",
+      edition: lead.edition || "",
+      salesRep: lead.salesRep || ""
+    });
+  };
+
+const statusOptions = [
+    { value: "all", label: "All Status" },
+    { value: "connected", label: "Connected" },
+    { value: "locked", label: "Locked" },
+    { value: "meeting-booked", label: "Meeting Booked" },
+    { value: "meeting-done", label: "Meeting Done" },
+    { value: "negotiation", label: "Negotiation" },
+    { value: "closed", label: "Closed" },
+    { value: "lost", label: "Lost" },
+    { value: "launched-appsumo", label: "Launched on AppSumo" },
+    { value: "launched-prime", label: "Launched on Prime Club" },
+    { value: "keep-eye", label: "Keep an Eye" },
+    { value: "rejected", label: "Rejected" },
+    { value: "unsubscribed", label: "Unsubscribed" },
+    { value: "outdated", label: "Outdated" },
+    { value: "hotlist", label: "Hotlist" },
+    { value: "out-of-league", label: "Out of League" }
+  ];
+
+const sourceOptions = [
+    { value: "all", label: "All Sources" },
+    { value: "Website", label: "Website" },
+    { value: "LinkedIn", label: "LinkedIn" },
+    { value: "Referral", label: "Referral" },
+    { value: "Trade Show", label: "Trade Show" },
+    { value: "Google Ads", label: "Google Ads" },
+    { value: "Email Campaign", label: "Email Campaign" }
+  ];
+
+  const categoryOptions = [
+    "Form Builder", "CRM", "Project Management", "Affiliate Management", "Help Desk",
+    "Live Chat", "Graphic Design", "WordPress Plugin", "VPN", "Landing Page Builder",
+    "Email Marketing", "Social Media Management", "SEO Tools", "Analytics", "E-commerce",
+    "Payment Processing", "Accounting Software", "HR Management", "Document Management",
+    "Cloud Storage", "Backup Solutions", "Security Software", "Password Manager",
+    "Video Conferencing", "Screen Recording", "File Sharing", "Task Management",
+    "Time Tracking", "Invoice Generator", "Survey Tools", "Website Builder",
+    "App Development", "API Tools", "Database Management", "Monitoring Tools",
+    "Testing Tools", "Code Editor", "Version Control", "Deployment Tools",
+    "Content Management", "Blogging Platform", "Course Creation", "Learning Management",
+    "Event Management", "Booking System", "Appointment Scheduling", "Customer Support",
+    "Knowledge Base", "FAQ Software", "Feedback Collection", "Review Management",
+    "Reputation Management", "Social Proof", "A/B Testing", "Heat Mapping",
+    "User Behavior", "Conversion Optimization", "Lead Generation", "Sales Automation",
+    "Marketing Automation", "Webinar Software", "Podcast Hosting", "Video Hosting",
+    "Image Optimization", "CDN Service", "Performance Optimization", "Website Speed",
+    "Mobile App Testing", "Cross-browser Testing", "Load Testing", "Security Testing",
+    "Penetration Testing", "Vulnerability Scanner", "SSL Certificate", "Domain Registration",
+    "Web Hosting", "VPS Hosting", "Dedicated Server", "Cloud Hosting", "CDN Hosting",
+    "Email Hosting", "Database Hosting", "Application Hosting", "WordPress Hosting",
+    "E-commerce Hosting", "Reseller Hosting", "Managed Hosting", "Shared Hosting",
+    "Business Hosting", "Enterprise Hosting", "Startup Tools", "Business Intelligence",
+    "Data Visualization", "Reporting Tools", "Dashboard Software", "Workflow Automation",
+    "Integration Platform", "API Management", "Microservices", "Serverless Computing",
+    "Container Management", "Orchestration Tools", "DevOps Tools", "CI/CD Pipeline",
+    "Infrastructure Management", "Cloud Management", "Multi-cloud", "Hybrid Cloud",
+    "Edge Computing", "IoT Platform", "Machine Learning", "Artificial Intelligence",
+    "Natural Language Processing", "Computer Vision", "Data Science", "Big Data",
+    "Data Mining", "Predictive Analytics"
+  ];
+const editionOptions = [
+    "Black Edition", "Collector's Edition", "Limited Edition"
+  ];
+
+  const fundingTypeOptions = [
+    "Bootstrapped", "Pre-seed", "Y Combinator", "Angel", "Series A", "Series B", "Series C"
+  ];
+  const loadLeads = async () => {
+    setIsLoading(true);
+    setError("");
+    
+    try {
+      const data = await leadsService.getAll();
+      setLeads(data);
+      setFilteredLeads(data);
+    } catch (err) {
+      setError(err.message || "Failed to load leads");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadLeads();
+  }, []);
+
+  useEffect(() => {
+    let filtered = leads;
+
+    // Apply search filter
+if (searchTerm) {
+      filtered = filtered.filter(lead =>
+        lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        lead.company.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply status filter
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(lead => lead.status === statusFilter);
+    }
+
+    // Apply source filter
+    if (sourceFilter !== "all") {
+      filtered = filtered.filter(lead => lead.source === sourceFilter);
+    }
+
+    setFilteredLeads(filtered);
+  }, [leads, searchTerm, statusFilter, sourceFilter]);
+
+const handleAddLead = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const leadData = {
+        ...newLead,
+        value: parseFloat(newLead.value) || 0
+      };
+      
+      const createdLead = await leadsService.create(leadData);
+      setLeads(prev => [createdLead, ...prev]);
+      setShowAddModal(false);
+      setNewLead({
+        name: "",
+        company: "",
+        source: "Website",
+        status: "connected",
+        value: "",
+        notes: "",
+        websiteUrl: "",
+        teamSize: "",
+        arr: "",
+        category: "",
+        linkedinUrl: "",
+        fundingType: "",
+        edition: "",
+        salesRep: ""
+      });
+      toast.success("Lead added successfully!");
+    } catch (err) {
+      toast.error(err.message || "Failed to add lead");
+    }
+  };
+
+  const handleEditLead = async (e) => {
+    e.preventDefault();
+    
+    if (!selectedLead) return;
+    
+    try {
+      const leadData = {
+        ...editLead,
+        value: parseFloat(editLead.value) || 0,
+        teamSize: editLead.teamSize ? parseInt(editLead.teamSize) : null,
+        arr: editLead.arr ? parseFloat(editLead.arr) : null
+      };
+      
+      const updatedLead = await leadsService.update(selectedLead.Id, leadData);
+      setLeads(prev => prev.map(lead => 
+        lead.Id === selectedLead.Id ? updatedLead : lead
+      ));
+      setShowEditModal(false);
+      setEditLead(null);
+      setSelectedLead(null);
+      toast.success("Lead updated successfully!");
+    } catch (err) {
+      toast.error(err.message || "Failed to update lead");
+    }
+  };
+
+const handleStatusUpdate = async (leadId, newStatus) => {
+    try {
+      const updatedLead = await leadsService.update(leadId, { 
+        status: newStatus,
+        lastContactedAt: newStatus !== "new" ? new Date().toISOString() : null
+      });
+      
+      setLeads(prev => prev.map(lead => 
+        lead.Id === leadId ? updatedLead : lead
+      ));
+      
+      toast.success("Lead status updated!");
+    } catch (err) {
+      toast.error(err.message || "Failed to update lead status");
+    }
+  };
+
+const handleCellEdit = (leadId, field, currentValue) => {
+    setEditingCell(`${leadId}-${field}`);
+    setEditingValue(currentValue || "");
+  };
+
+  const handleCellSave = async (leadId, field) => {
+    const cellKey = `${leadId}-${field}`;
+    setSavingCell(cellKey);
+    
+    try {
+      let valueToSave = editingValue;
+      
+      // Convert numeric fields
+      if (field === 'teamSize' || field === 'arr') {
+        const numValue = parseInt(editingValue);
+        valueToSave = isNaN(numValue) ? null : numValue;
+      }
+      
+      // Validate and format URL fields
+      if (field === 'websiteUrl' || field === 'linkedinUrl') {
+        valueToSave = editingValue.trim();
+        if (valueToSave && !valueToSave.match(/^https?:\/\//)) {
+          valueToSave = `https://${valueToSave}`;
+        }
+        // Basic URL validation
+        if (valueToSave) {
+          try {
+            new URL(valueToSave);
+          } catch {
+            throw new Error("Please enter a valid URL");
+          }
+        }
+      }
+      
+      const updatedLead = await leadsService.update(leadId, { 
+        [field]: valueToSave 
+      });
+      
+      setLeads(prev => prev.map(lead => 
+        lead.Id === leadId ? updatedLead : lead
+      ));
+      
+      setEditingCell(null);
+      setEditingValue("");
+      toast.success("Lead updated successfully!");
+    } catch (err) {
+      toast.error(err.message || "Failed to update lead");
+    } finally {
+      setSavingCell(null);
+    }
+  };
+
+  const handleCellCancel = () => {
+    setEditingCell(null);
+    setEditingValue("");
+  };
+
+  const handleKeyPress = (e, leadId, field) => {
+    if (e.key === 'Enter') {
+      handleCellSave(leadId, field);
+    } else if (e.key === 'Escape') {
+      handleCellCancel();
+    }
+  };
+
+  if (isLoading) return <Loading type="table" />;
+  if (error) return <Error message={error} onRetry={loadLeads} />;
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+              Leads Management
+            </h1>
+            <p className="text-slate-600 mt-2">
+              Track and manage your sales leads
+            </p>
+          </div>
+          
+          <Button
+            onClick={() => setShowAddModal(true)}
+            className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800"
+          >
+            <ApperIcon name="Plus" className="w-4 h-4 mr-2" />
+            Add New Lead
+          </Button>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Search</label>
+              <div className="relative">
+                <ApperIcon name="Search" className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                <Input
+                  placeholder="Search leads..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Status</label>
+              <select
+value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                {statusOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Source</label>
+              <select
+                value={sourceFilter}
+                onChange={(e) => setSourceFilter(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              >
+                {sourceOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="flex items-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchTerm("");
+                  setStatusFilter("all");
+                  setSourceFilter("all");
+                }}
+                className="w-full"
+              >
+                <ApperIcon name="X" className="w-4 h-4 mr-2" />
+                Clear Filters
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Leads Table */}
+        {filteredLeads.length === 0 ? (
+          <Empty
+            title="No leads found"
+            description="Get started by adding your first lead or adjust your filters."
+            icon="Users"
+            actionLabel="Add First Lead"
+            onAction={() => setShowAddModal(true)}
+          />
+        ) : (
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b border-slate-200">
+<tr>
+                      <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => {/* View all functionality can be added here */}}
+                            className="text-slate-400 hover:text-slate-600 transition-colors"
+                            title="View Records"
+                          >
+                            <ApperIcon name="Eye" size={14} />
+                          </button>
+                          <span>Name</span>
+                        </div>
+                      </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Company
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Website URL
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      LinkedIn URL
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Team Size
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      ARR
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Category
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Edition
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Funding Type
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Last Contact
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Sales Rep
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Source
+                    </th>
+                    <th className="sticky right-0 bg-white px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider border-l border-slate-200">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredLeads.map((lead, index) => (
+                    <motion.tr
+                      key={lead.Id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+className="hover:bg-slate-50 transition-colors"
+                    >
+<td className="px-4 py-4">
+                        <div className="flex items-center space-x-3">
+                          <button
+                            onClick={() => setSelectedLead(lead)}
+                            className="text-slate-400 hover:text-primary-600 transition-colors flex-shrink-0"
+                            title="View Lead Details"
+                          >
+                            <ApperIcon name="Eye" size={16} />
+                          </button>
+                          <div className="min-w-0 flex-1">
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-medium text-xs">
+                            {lead.name.split(" ").map(n => n[0]).join("").toUpperCase()}
+                          </div>
+                          <div className="ml-2">
+                            {editingCell === `${lead.Id}-name` ? (
+                              <div className="flex items-center gap-1">
+                                <Input
+                                  value={editingValue}
+                                  onChange={(e) => setEditingValue(e.target.value)}
+                                  onKeyDown={(e) => handleKeyPress(e, lead.Id, 'name')}
+                                  className="text-xs h-6 w-24"
+                                  autoFocus
+                                />
+                                <button
+                                  onClick={() => handleCellSave(lead.Id, 'name')}
+                                  disabled={savingCell === `${lead.Id}-name`}
+                                  className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50"
+                                >
+                                  <ApperIcon name="Check" className="w-3 h-3" />
+                                </button>
+                                <button
+                                  onClick={handleCellCancel}
+                                  className="p-1 text-red-600 hover:text-red-800"
+                                >
+                                  <ApperIcon name="X" className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ) : (
+                              <p 
+                                className="text-xs font-medium text-slate-900 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCellEdit(lead.Id, 'name', lead.name);
+                                }}
+                              >
+                                {lead.name}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                          </div>
+                        </div>
+                        </td>
+                      <td className="px-4 py-4">
+                        <div>
+                          {editingCell === `${lead.Id}-company` ? (
+                            <div className="flex items-center gap-1">
+                              <Input
+                                value={editingValue}
+                                onChange={(e) => setEditingValue(e.target.value)}
+                                onKeyDown={(e) => handleKeyPress(e, lead.Id, 'company')}
+                                className="text-xs h-6 w-24"
+                                autoFocus
+                              />
+                              <button
+                                onClick={() => handleCellSave(lead.Id, 'company')}
+                                disabled={savingCell === `${lead.Id}-company`}
+                                className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50"
+                              >
+                                <ApperIcon name="Check" className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={handleCellCancel}
+                                className="p-1 text-red-600 hover:text-red-800"
+                              >
+                                <ApperIcon name="X" className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <p 
+                              className="text-xs font-medium text-slate-900 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCellEdit(lead.Id, 'company', lead.company);
+                              }}
+                            >
+                              {lead.company}
+                            </p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        {editingCell === `${lead.Id}-websiteUrl` ? (
+                          <div className="flex items-center gap-1">
+                            <Input
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              onKeyPress={(e) => handleKeyPress(e, lead.Id, 'websiteUrl')}
+                              className="h-7 text-xs w-28"
+                              placeholder="Enter website URL"
+                              autoFocus
+                            />
+                            <Button
+                              onClick={() => handleCellSave(lead.Id, 'websiteUrl')}
+                              disabled={savingCell === `${lead.Id}-websiteUrl`}
+                              className="h-6 w-6 p-0 text-xs"
+                              variant="outline"
+                            >
+                              ✓
+                            </Button>
+                            <Button
+                              onClick={handleCellCancel}
+                              className="h-6 w-6 p-0 text-xs"
+                              variant="outline"
+                            >
+                              ✕
+                            </Button>
+                          </div>
+                        ) : (
+                          <div 
+                            className="cursor-pointer group flex items-center"
+                            onDoubleClick={() => handleCellEdit(lead.Id, 'websiteUrl', lead.websiteUrl)}
+                          >
+                            {lead.websiteUrl ? (
+                              <a 
+                                href={lead.websiteUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-xs text-primary-600 hover:text-primary-800 underline truncate max-w-24 block"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {lead.websiteUrl.replace(/^https?:\/\//, '')}
+                              </a>
+                            ) : (
+                              <span className="text-xs text-gray-400">N/A</span>
+                            )}
+                            <span className="ml-1 opacity-0 group-hover:opacity-100 text-gray-400">
+                              <ApperIcon name="Edit3" size={12} />
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        {editingCell === `${lead.Id}-linkedinUrl` ? (
+                          <div className="flex items-center gap-1">
+                            <Input
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              onKeyPress={(e) => handleKeyPress(e, lead.Id, 'linkedinUrl')}
+                              className="h-7 text-xs w-28"
+                              placeholder="Enter LinkedIn URL"
+                              autoFocus
+                            />
+                            <Button
+                              onClick={() => handleCellSave(lead.Id, 'linkedinUrl')}
+                              disabled={savingCell === `${lead.Id}-linkedinUrl`}
+                              className="h-6 w-6 p-0 text-xs"
+                              variant="outline"
+                            >
+                              ✓
+                            </Button>
+                            <Button
+                              onClick={handleCellCancel}
+                              className="h-6 w-6 p-0 text-xs"
+                              variant="outline"
+                            >
+                              ✕
+                            </Button>
+                          </div>
+                        ) : (
+                          <div 
+                            className="cursor-pointer group flex items-center"
+                            onDoubleClick={() => handleCellEdit(lead.Id, 'linkedinUrl', lead.linkedinUrl)}
+                          >
+                            {lead.linkedinUrl ? (
+                              <a 
+                                href={lead.linkedinUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-xs text-primary-600 hover:text-primary-800 underline truncate max-w-24 block"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                LinkedIn
+                              </a>
+                            ) : (
+                              <span className="text-xs text-gray-400">N/A</span>
+                            )}
+                            <span className="ml-1 opacity-0 group-hover:opacity-100 text-gray-400">
+                              <ApperIcon name="Edit3" size={12} />
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        {editingCell === `${lead.Id}-teamSize` ? (
+                          <div className="flex items-center gap-1">
+                            <Input
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              onKeyDown={(e) => handleKeyPress(e, lead.Id, 'teamSize')}
+                              className="text-xs h-6 w-20"
+                              type="number"
+                              autoFocus
+                            />
+                            <button
+                              onClick={() => handleCellSave(lead.Id, 'teamSize')}
+                              disabled={savingCell === `${lead.Id}-teamSize`}
+                              className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50"
+                            >
+                              <ApperIcon name="Check" className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={handleCellCancel}
+                              className="p-1 text-red-600 hover:text-red-800"
+                            >
+                              <ApperIcon name="X" className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <span 
+                            className="text-xs text-slate-900 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCellEdit(lead.Id, 'teamSize', lead.teamSize);
+                            }}
+                          >
+                            {lead.teamSize || 'N/A'}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        {editingCell === `${lead.Id}-arr` ? (
+                          <div className="flex items-center gap-1">
+                            <Input
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              onKeyDown={(e) => handleKeyPress(e, lead.Id, 'arr')}
+                              className="text-xs h-6 w-20"
+                              type="number"
+                              autoFocus
+                            />
+                            <button
+                              onClick={() => handleCellSave(lead.Id, 'arr')}
+                              disabled={savingCell === `${lead.Id}-arr`}
+                              className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50"
+                            >
+                              <ApperIcon name="Check" className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={handleCellCancel}
+                              className="p-1 text-red-600 hover:text-red-800"
+                            >
+                              <ApperIcon name="X" className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <span 
+                            className="text-xs font-medium text-slate-900 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCellEdit(lead.Id, 'arr', lead.arr);
+                            }}
+                          >
+                            ${lead.arr?.toLocaleString() || 'N/A'}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        {editingCell === `${lead.Id}-category` ? (
+                          <div className="flex items-center gap-1">
+                            <select
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              onKeyDown={(e) => handleKeyPress(e, lead.Id, 'category')}
+                              className="text-xs h-6 w-32 border-0 bg-transparent focus:ring-0 focus:outline-none cursor-pointer"
+                              autoFocus
+                            >
+                              <option value="">Select category</option>
+                              {categoryOptions.map(option => (
+                                <option key={option} value={option}>
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={() => handleCellSave(lead.Id, 'category')}
+                              disabled={savingCell === `${lead.Id}-category`}
+                              className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50"
+                            >
+                              <ApperIcon name="Check" className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={handleCellCancel}
+                              className="p-1 text-red-600 hover:text-red-800"
+                            >
+                              <ApperIcon name="X" className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <span 
+                            className="text-xs text-slate-600 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCellEdit(lead.Id, 'category', lead.category);
+                            }}
+                          >
+                            {lead.category || 'N/A'}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        {editingCell === `${lead.Id}-edition` ? (
+                          <div className="flex items-center gap-1">
+                            <select
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              onKeyDown={(e) => handleKeyPress(e, lead.Id, 'edition')}
+                              className="text-xs h-6 w-32 border-0 bg-transparent focus:ring-0 focus:outline-none cursor-pointer"
+                              autoFocus
+                            >
+                              <option value="">Select Edition</option>
+                              {editionOptions.map(option => (
+                                <option key={option} value={option}>
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={() => handleCellSave(lead.Id, 'edition')}
+                              disabled={savingCell === `${lead.Id}-edition`}
+                              className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50"
+                            >
+                              <ApperIcon name="Check" className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={handleCellCancel}
+                              className="p-1 text-red-600 hover:text-red-800"
+                            >
+                              <ApperIcon name="X" className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <span 
+                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 cursor-pointer hover:bg-green-200"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCellEdit(lead.Id, 'edition', lead.edition);
+                            }}
+                          >
+                            {lead.edition || 'N/A'}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        {editingCell === `${lead.Id}-fundingType` ? (
+                          <div className="flex items-center gap-1">
+                            <select
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              onKeyDown={(e) => handleKeyPress(e, lead.Id, 'fundingType')}
+                              className="text-xs h-6 w-32 border-0 bg-transparent focus:ring-0 focus:outline-none cursor-pointer"
+                              autoFocus
+                            >
+                              <option value="">Select Funding Type</option>
+                              {fundingTypeOptions.map(option => (
+                                <option key={option} value={option}>
+                                  {option}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={() => handleCellSave(lead.Id, 'fundingType')}
+                              disabled={savingCell === `${lead.Id}-fundingType`}
+                              className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50"
+                            >
+                              <ApperIcon name="Check" className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={handleCellCancel}
+                              className="p-1 text-red-600 hover:text-red-800"
+                            >
+                              <ApperIcon name="X" className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <span 
+                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 cursor-pointer hover:bg-blue-200"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCellEdit(lead.Id, 'fundingType', lead.fundingType);
+                            }}
+                          >
+                            {lead.fundingType || 'N/A'}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        <select
+                          value={lead.status}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            handleStatusUpdate(lead.Id, e.target.value);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-xs border-0 bg-transparent focus:ring-0 focus:outline-none cursor-pointer"
+                        >
+                          <option value="connected">Connected</option>
+                          <option value="locked">Locked</option>
+                          <option value="meeting-booked">Meeting Booked</option>
+                          <option value="meeting-done">Meeting Done</option>
+                          <option value="negotiation">Negotiation</option>
+                          <option value="closed">Closed</option>
+                          <option value="lost">Lost</option>
+                          <option value="launched-appsumo">Launched on AppSumo</option>
+                          <option value="launched-prime">Launched on Prime Club</option>
+                          <option value="keep-eye">Keep an Eye</option>
+                          <option value="rejected">Rejected</option>
+                          <option value="unsubscribed">Unsubscribed</option>
+                          <option value="outdated">Outdated</option>
+                          <option value="hotlist">Hotlist</option>
+                          <option value="out-of-league">Out of League</option>
+                        </select>
+                        <StatusBadge status={lead.status} type="lead" />
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="text-xs text-slate-600">
+                          {lead.lastContactedAt 
+                            ? format(new Date(lead.lastContactedAt), "MMM dd, yyyy")
+                            : "Never"
+                          }
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="text-xs font-medium text-slate-900">
+                          {lead.assignedTo || "Unassigned"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">
+                        {editingCell === `${lead.Id}-notes` ? (
+                          <div className="flex items-start gap-1">
+                            <textarea
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && e.ctrlKey) {
+                                  handleCellSave(lead.Id, 'notes');
+                                } else if (e.key === 'Escape') {
+                                  handleCellCancel();
+                                }
+                              }}
+                              className="text-xs w-32 h-16 p-2 border border-slate-300 rounded resize-none focus:outline-none focus:ring-2 focus:ring-primary-500"
+                              autoFocus
+                              rows={3}
+                            />
+                            <div className="flex flex-col gap-1">
+                              <button
+                                onClick={() => handleCellSave(lead.Id, 'notes')}
+                                disabled={savingCell === `${lead.Id}-notes`}
+                                className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50"
+                              >
+                                <ApperIcon name="Check" className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={handleCellCancel}
+                                className="p-1 text-red-600 hover:text-red-800"
+                              >
+                                <ApperIcon name="X" className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div 
+                            className="text-xs text-slate-600 max-w-32 cursor-pointer hover:bg-slate-100 px-2 py-1 rounded leading-relaxed whitespace-pre-wrap" 
+                            title={lead.notes}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCellEdit(lead.Id, 'notes', lead.notes);
+                            }}
+                          >
+                            {lead.notes || "No notes"}
+                          </div>
+                        )}
+                      </td>
+                      <td className="sticky right-0 bg-white border-l border-slate-200 px-4 py-4">
+                        <div className="flex items-center space-x-1">
+<button
+onClick={(e) => {
+                              e.stopPropagation();
+                              initializeEditLead(lead);
+                              setShowEditModal(true);
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          >
+                            <ApperIcon name="Edit" className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Handle call action
+                              toast.success("Call initiated");
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                          >
+                            <ApperIcon name="Phone" className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEmailLead(lead);
+                              setShowEmailComposer(true);
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          >
+                            <ApperIcon name="Mail" className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Add Lead Modal */}
+        <AnimatePresence>
+          {showAddModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              onClick={() => setShowAddModal(false)}
+            >
+<motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                onClick={(e) => e.stopPropagation()}
+className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-200 max-h-[90vh] flex flex-col"
+              >
+                <div className="p-6 border-b border-slate-200">
+                  <h3 className="text-lg font-semibold text-slate-900">Add New Lead</h3>
+                </div>
+                
+<form onSubmit={handleAddLead} className="flex flex-col h-full">
+<div className="flex-1 overflow-y-auto p-6 scrollbar-gutter-stable" style={{scrollbarWidth: 'thin'}}>
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+<label className="block text-sm font-medium text-slate-700 mb-2">
+                            Product Name *
+                          </label>
+                          <Input
+                            value={newLead.name}
+                            onChange={(e) => setNewLead({ ...newLead, name: e.target.value })}
+                            required
+                            placeholder="Enter product name"
+                          />
+                        </div>
+                        
+                        
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Company *
+                          </label>
+                          <Input
+                            value={newLead.company}
+                            onChange={(e) => setNewLead({ ...newLead, company: e.target.value })}
+                            required
+                            placeholder="Enter company name"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Website URL
+                          </label>
+                          <Input
+                            type="url"
+                            value={newLead.websiteUrl}
+                            onChange={(e) => setNewLead({ ...newLead, websiteUrl: e.target.value })}
+                            placeholder="https://company-website.com"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            LinkedIn URL
+                          </label>
+                          <Input
+                            type="url"
+                            value={newLead.linkedinUrl}
+                            onChange={(e) => setNewLead({ ...newLead, linkedinUrl: e.target.value })}
+                            placeholder="https://linkedin.com/company/company-name"
+                          />
+                        </div>
+<div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Team Size
+                          </label>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={newLead.teamSize}
+                            onChange={(e) => setNewLead({ ...newLead, teamSize: e.target.value })}
+                            placeholder="Number of employees"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            ARR (Annual Recurring Revenue)
+                          </label>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={newLead.arr}
+                            onChange={(e) => setNewLead({ ...newLead, arr: e.target.value })}
+                            placeholder="Enter ARR amount"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Category
+                          </label>
+<select
+                            value={newLead.category}
+                            onChange={(e) => setNewLead({ ...newLead, category: e.target.value })}
+                            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          >
+                            <option value="">Select category</option>
+                            <option value="Form Builder">Form Builder</option>
+                            <option value="CRM">CRM</option>
+                            <option value="Project Management">Project Management</option>
+                            <option value="Affiliate Management">Affiliate Management</option>
+                            <option value="Help Desk">Help Desk</option>
+                            <option value="Live Chat">Live Chat</option>
+                            <option value="Graphic Design">Graphic Design</option>
+                            <option value="WordPress Plugin">WordPress Plugin</option>
+                            <option value="VPN">VPN</option>
+                            <option value="Landing Page Builder">Landing Page Builder</option>
+                            <option value="Email Marketing">Email Marketing</option>
+                            <option value="Social Media Management">Social Media Management</option>
+                            <option value="SEO Tools">SEO Tools</option>
+                            <option value="Analytics">Analytics</option>
+                            <option value="E-commerce">E-commerce</option>
+                            <option value="Payment Processing">Payment Processing</option>
+                            <option value="Accounting Software">Accounting Software</option>
+                            <option value="HR Management">HR Management</option>
+                            <option value="Document Management">Document Management</option>
+                            <option value="Cloud Storage">Cloud Storage</option>
+                            <option value="Backup Solutions">Backup Solutions</option>
+                            <option value="Security Software">Security Software</option>
+                            <option value="Password Manager">Password Manager</option>
+                            <option value="Video Conferencing">Video Conferencing</option>
+                            <option value="Screen Recording">Screen Recording</option>
+                            <option value="File Sharing">File Sharing</option>
+                            <option value="Task Management">Task Management</option>
+                            <option value="Time Tracking">Time Tracking</option>
+                            <option value="Invoice Generator">Invoice Generator</option>
+                            <option value="Survey Tools">Survey Tools</option>
+                            <option value="Website Builder">Website Builder</option>
+                            <option value="App Development">App Development</option>
+                            <option value="API Tools">API Tools</option>
+                            <option value="Database Management">Database Management</option>
+                            <option value="Monitoring Tools">Monitoring Tools</option>
+                            <option value="Testing Tools">Testing Tools</option>
+                            <option value="Code Editor">Code Editor</option>
+                            <option value="Version Control">Version Control</option>
+                            <option value="Deployment Tools">Deployment Tools</option>
+                            <option value="Content Management">Content Management</option>
+                            <option value="Blogging Platform">Blogging Platform</option>
+                            <option value="Course Creation">Course Creation</option>
+                            <option value="Learning Management">Learning Management</option>
+                            <option value="Event Management">Event Management</option>
+                            <option value="Booking System">Booking System</option>
+                            <option value="Appointment Scheduling">Appointment Scheduling</option>
+                            <option value="Customer Support">Customer Support</option>
+                            <option value="Knowledge Base">Knowledge Base</option>
+                            <option value="FAQ Software">FAQ Software</option>
+                            <option value="Feedback Collection">Feedback Collection</option>
+                            <option value="Review Management">Review Management</option>
+                            <option value="Reputation Management">Reputation Management</option>
+                            <option value="Social Proof">Social Proof</option>
+                            <option value="A/B Testing">A/B Testing</option>
+                            <option value="Heat Mapping">Heat Mapping</option>
+                            <option value="User Behavior">User Behavior</option>
+                            <option value="Conversion Optimization">Conversion Optimization</option>
+                            <option value="Lead Generation">Lead Generation</option>
+                            <option value="Sales Automation">Sales Automation</option>
+                            <option value="Marketing Automation">Marketing Automation</option>
+                            <option value="Webinar Software">Webinar Software</option>
+                            <option value="Podcast Hosting">Podcast Hosting</option>
+                            <option value="Video Hosting">Video Hosting</option>
+                            <option value="Image Optimization">Image Optimization</option>
+                            <option value="CDN Service">CDN Service</option>
+                            <option value="Performance Optimization">Performance Optimization</option>
+                            <option value="Website Speed">Website Speed</option>
+                            <option value="Mobile App Testing">Mobile App Testing</option>
+                            <option value="Cross-browser Testing">Cross-browser Testing</option>
+                            <option value="Load Testing">Load Testing</option>
+                            <option value="Security Testing">Security Testing</option>
+                            <option value="Penetration Testing">Penetration Testing</option>
+                            <option value="Vulnerability Scanner">Vulnerability Scanner</option>
+                            <option value="SSL Certificate">SSL Certificate</option>
+                            <option value="Domain Registration">Domain Registration</option>
+                            <option value="Web Hosting">Web Hosting</option>
+                            <option value="VPS Hosting">VPS Hosting</option>
+                            <option value="Dedicated Server">Dedicated Server</option>
+                            <option value="Cloud Hosting">Cloud Hosting</option>
+                            <option value="CDN Hosting">CDN Hosting</option>
+                            <option value="Email Hosting">Email Hosting</option>
+                            <option value="Database Hosting">Database Hosting</option>
+                            <option value="Application Hosting">Application Hosting</option>
+                            <option value="WordPress Hosting">WordPress Hosting</option>
+                            <option value="E-commerce Hosting">E-commerce Hosting</option>
+                            <option value="Reseller Hosting">Reseller Hosting</option>
+                            <option value="Managed Hosting">Managed Hosting</option>
+                            <option value="Shared Hosting">Shared Hosting</option>
+                            <option value="Business Hosting">Business Hosting</option>
+                            <option value="Enterprise Hosting">Enterprise Hosting</option>
+                            <option value="Startup Tools">Startup Tools</option>
+                            <option value="Business Intelligence">Business Intelligence</option>
+                            <option value="Data Visualization">Data Visualization</option>
+                            <option value="Reporting Tools">Reporting Tools</option>
+                            <option value="Dashboard Software">Dashboard Software</option>
+                            <option value="Workflow Automation">Workflow Automation</option>
+                            <option value="Integration Platform">Integration Platform</option>
+                            <option value="API Management">API Management</option>
+                            <option value="Microservices">Microservices</option>
+                            <option value="Serverless Computing">Serverless Computing</option>
+                            <option value="Container Management">Container Management</option>
+                            <option value="Orchestration Tools">Orchestration Tools</option>
+                            <option value="DevOps Tools">DevOps Tools</option>
+                            <option value="CI/CD Pipeline">CI/CD Pipeline</option>
+                            <option value="Infrastructure Management">Infrastructure Management</option>
+                            <option value="Cloud Management">Cloud Management</option>
+                            <option value="Multi-cloud">Multi-cloud</option>
+                            <option value="Hybrid Cloud">Hybrid Cloud</option>
+                            <option value="Edge Computing">Edge Computing</option>
+                            <option value="IoT Platform">IoT Platform</option>
+                            <option value="Machine Learning">Machine Learning</option>
+                            <option value="Artificial Intelligence">Artificial Intelligence</option>
+                            <option value="Natural Language Processing">Natural Language Processing</option>
+                            <option value="Computer Vision">Computer Vision</option>
+                            <option value="Data Science">Data Science</option>
+                            <option value="Big Data">Big Data</option>
+                            <option value="Data Mining">Data Mining</option>
+                            <option value="Predictive Analytics">Predictive Analytics</option>
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Source
+                          </label>
+                          <select
+                            value={newLead.source}
+                            onChange={(e) => setNewLead({ ...newLead, source: e.target.value })}
+                            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          >
+                            <option value="Website">Website</option>
+                            <option value="LinkedIn">LinkedIn</option>
+                            <option value="Referral">Referral</option>
+                            <option value="Trade Show">Trade Show</option>
+                            <option value="Google Ads">Google Ads</option>
+                            <option value="Email Campaign">Email Campaign</option>
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Status
+                          </label>
+<select
+                            value={newLead.status}
+                            onChange={(e) => setNewLead({ ...newLead, status: e.target.value })}
+                            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          >
+                            <option value="connected">Connected</option>
+                            <option value="locked">Locked</option>
+                            <option value="meeting-booked">Meeting Booked</option>
+                            <option value="meeting-done">Meeting Done</option>
+                            <option value="negotiation">Negotiation</option>
+                            <option value="closed">Closed</option>
+                            <option value="lost">Lost</option>
+                            <option value="launched-appsumo">Launched on AppSumo</option>
+                            <option value="launched-prime">Launched on Prime Club</option>
+                            <option value="keep-eye">Keep an Eye</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="unsubscribed">Unsubscribed</option>
+                            <option value="outdated">Outdated</option>
+                            <option value="hotlist">Hotlist</option>
+                            <option value="out-of-league">Out of League</option>
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Funding Type
+                          </label>
+<select
+                            value={newLead.fundingType}
+                            onChange={(e) => setNewLead({ ...newLead, fundingType: e.target.value })}
+                            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          >
+                            <option value="">Select funding type</option>
+                            <option value="Bootstrapped">Bootstrapped</option>
+                            <option value="Pre-seed">Pre-seed</option>
+                            <option value="Y Combinator">Y Combinator</option>
+                            <option value="Angel">Angel</option>
+                            <option value="Series A">Series A</option>
+                            <option value="Series B">Series B</option>
+                            <option value="Series C">Series C</option>
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Edition
+                          </label>
+<select
+                            value={newLead.edition}
+                            onChange={(e) => setNewLead({ ...newLead, edition: e.target.value })}
+                            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          >
+                            <option value="">Select Edition</option>
+                            <option value="Black Edition">Black Edition</option>
+                            <option value="Collector's Edition">Collector's Edition</option>
+                            <option value="Limited Edition">Limited Edition</option>
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Estimated Value
+                          </label>
+                          <Input
+                            type="number"
+                            value={newLead.value}
+                            onChange={(e) => setNewLead({ ...newLead, value: e.target.value })}
+                            placeholder="Enter estimated deal value"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Sales Rep
+                          </label>
+                          <Input
+                            value={newLead.salesRep}
+                            onChange={(e) => setNewLead({ ...newLead, salesRep: e.target.value })}
+                            placeholder="Assigned sales representative"
+                          />
+                        </div>
+                        
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                          Notes
+                        </label>
+                        <textarea
+                          value={newLead.notes}
+                          onChange={(e) => setNewLead({ ...newLead, notes: e.target.value })}
+                          rows={3}
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          placeholder="Add any additional notes..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex-shrink-0 flex justify-end space-x-3 p-6 border-t border-slate-200 bg-white rounded-b-xl">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowAddModal(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit">
+                      Add Lead
+                    </Button>
+                  </div>
+                </form>
+</motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Edit Lead Modal */}
+        <AnimatePresence>
+          {showEditModal && editLead && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              onClick={() => {
+                setShowEditModal(false);
+                setEditLead(null);
+                setSelectedLead(null);
+              }}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-200 max-h-[90vh] flex flex-col"
+              >
+                <div className="p-6 border-b border-slate-200">
+                  <h3 className="text-lg font-semibold text-slate-900">Edit Lead</h3>
+                </div>
+                
+                <form onSubmit={handleEditLead} className="flex flex-col h-full">
+                  <div className="flex-1 overflow-y-auto p-6 scrollbar-gutter-stable" style={{scrollbarWidth: 'thin'}}>
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Product Name *
+                          </label>
+                          <Input
+                            value={editLead.name}
+                            onChange={(e) => setEditLead({ ...editLead, name: e.target.value })}
+                            required
+                            placeholder="Enter product name"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Company *
+                          </label>
+                          <Input
+                            value={editLead.company}
+                            onChange={(e) => setEditLead({ ...editLead, company: e.target.value })}
+                            required
+                            placeholder="Enter company name"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Website URL
+                          </label>
+                          <Input
+                            type="url"
+                            value={editLead.websiteUrl}
+                            onChange={(e) => setEditLead({ ...editLead, websiteUrl: e.target.value })}
+                            placeholder="https://company-website.com"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            LinkedIn URL
+                          </label>
+                          <Input
+                            type="url"
+                            value={editLead.linkedinUrl}
+                            onChange={(e) => setEditLead({ ...editLead, linkedinUrl: e.target.value })}
+                            placeholder="https://linkedin.com/company/company-name"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Team Size
+                          </label>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={editLead.teamSize}
+                            onChange={(e) => setEditLead({ ...editLead, teamSize: e.target.value })}
+                            placeholder="Number of employees"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            ARR (Annual Recurring Revenue)
+                          </label>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={editLead.arr}
+                            onChange={(e) => setEditLead({ ...editLead, arr: e.target.value })}
+                            placeholder="Enter ARR amount"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Category
+                          </label>
+                          <select
+                            value={editLead.category}
+                            onChange={(e) => setEditLead({ ...editLead, category: e.target.value })}
+                            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          >
+                            <option value="">Select category</option>
+                            <option value="Form Builder">Form Builder</option>
+                            <option value="CRM">CRM</option>
+                            <option value="Project Management">Project Management</option>
+                            <option value="Affiliate Management">Affiliate Management</option>
+                            <option value="Help Desk">Help Desk</option>
+                            <option value="Live Chat">Live Chat</option>
+                            <option value="Graphic Design">Graphic Design</option>
+                            <option value="WordPress Plugin">WordPress Plugin</option>
+                            <option value="VPN">VPN</option>
+                            <option value="Landing Page Builder">Landing Page Builder</option>
+                            <option value="Email Marketing">Email Marketing</option>
+                            <option value="Social Media Management">Social Media Management</option>
+                            <option value="SEO Tools">SEO Tools</option>
+                            <option value="Analytics">Analytics</option>
+                            <option value="E-commerce">E-commerce</option>
+                            <option value="Payment Processing">Payment Processing</option>
+                            <option value="Accounting Software">Accounting Software</option>
+                            <option value="HR Management">HR Management</option>
+                            <option value="Document Management">Document Management</option>
+                            <option value="Cloud Storage">Cloud Storage</option>
+                            <option value="Backup Solutions">Backup Solutions</option>
+                            <option value="Security Software">Security Software</option>
+                            <option value="Password Manager">Password Manager</option>
+                            <option value="Video Conferencing">Video Conferencing</option>
+                            <option value="Screen Recording">Screen Recording</option>
+                            <option value="File Sharing">File Sharing</option>
+                            <option value="Task Management">Task Management</option>
+                            <option value="Time Tracking">Time Tracking</option>
+                            <option value="Invoice Generator">Invoice Generator</option>
+                            <option value="Survey Tools">Survey Tools</option>
+                            <option value="Website Builder">Website Builder</option>
+                            <option value="App Development">App Development</option>
+                            <option value="API Tools">API Tools</option>
+                            <option value="Database Management">Database Management</option>
+                            <option value="Monitoring Tools">Monitoring Tools</option>
+                            <option value="Testing Tools">Testing Tools</option>
+                            <option value="Code Editor">Code Editor</option>
+                            <option value="Version Control">Version Control</option>
+                            <option value="Deployment Tools">Deployment Tools</option>
+                            <option value="Content Management">Content Management</option>
+                            <option value="Blogging Platform">Blogging Platform</option>
+                            <option value="Course Creation">Course Creation</option>
+                            <option value="Learning Management">Learning Management</option>
+                            <option value="Event Management">Event Management</option>
+                            <option value="Booking System">Booking System</option>
+                            <option value="Appointment Scheduling">Appointment Scheduling</option>
+                            <option value="Customer Support">Customer Support</option>
+                            <option value="Knowledge Base">Knowledge Base</option>
+                            <option value="FAQ Software">FAQ Software</option>
+                            <option value="Feedback Collection">Feedback Collection</option>
+                            <option value="Review Management">Review Management</option>
+                            <option value="Reputation Management">Reputation Management</option>
+                            <option value="Social Proof">Social Proof</option>
+                            <option value="A/B Testing">A/B Testing</option>
+                            <option value="Heat Mapping">Heat Mapping</option>
+                            <option value="User Behavior">User Behavior</option>
+                            <option value="Conversion Optimization">Conversion Optimization</option>
+                            <option value="Lead Generation">Lead Generation</option>
+                            <option value="Sales Automation">Sales Automation</option>
+                            <option value="Marketing Automation">Marketing Automation</option>
+                            <option value="Webinar Software">Webinar Software</option>
+                            <option value="Podcast Hosting">Podcast Hosting</option>
+                            <option value="Video Hosting">Video Hosting</option>
+                            <option value="Image Optimization">Image Optimization</option>
+                            <option value="CDN Service">CDN Service</option>
+                            <option value="Performance Optimization">Performance Optimization</option>
+                            <option value="Website Speed">Website Speed</option>
+                            <option value="Mobile App Testing">Mobile App Testing</option>
+                            <option value="Cross-browser Testing">Cross-browser Testing</option>
+                            <option value="Load Testing">Load Testing</option>
+                            <option value="Security Testing">Security Testing</option>
+                            <option value="Penetration Testing">Penetration Testing</option>
+                            <option value="Vulnerability Scanner">Vulnerability Scanner</option>
+                            <option value="SSL Certificate">SSL Certificate</option>
+                            <option value="Domain Registration">Domain Registration</option>
+                            <option value="Web Hosting">Web Hosting</option>
+                            <option value="VPS Hosting">VPS Hosting</option>
+                            <option value="Dedicated Server">Dedicated Server</option>
+                            <option value="Cloud Hosting">Cloud Hosting</option>
+                            <option value="CDN Hosting">CDN Hosting</option>
+                            <option value="Email Hosting">Email Hosting</option>
+                            <option value="Database Hosting">Database Hosting</option>
+                            <option value="Application Hosting">Application Hosting</option>
+                            <option value="WordPress Hosting">WordPress Hosting</option>
+                            <option value="E-commerce Hosting">E-commerce Hosting</option>
+                            <option value="Reseller Hosting">Reseller Hosting</option>
+                            <option value="Managed Hosting">Managed Hosting</option>
+                            <option value="Shared Hosting">Shared Hosting</option>
+                            <option value="Business Hosting">Business Hosting</option>
+                            <option value="Enterprise Hosting">Enterprise Hosting</option>
+                            <option value="Startup Tools">Startup Tools</option>
+                            <option value="Business Intelligence">Business Intelligence</option>
+                            <option value="Data Visualization">Data Visualization</option>
+                            <option value="Reporting Tools">Reporting Tools</option>
+                            <option value="Dashboard Software">Dashboard Software</option>
+                            <option value="Workflow Automation">Workflow Automation</option>
+                            <option value="Integration Platform">Integration Platform</option>
+                            <option value="API Management">API Management</option>
+                            <option value="Microservices">Microservices</option>
+                            <option value="Serverless Computing">Serverless Computing</option>
+                            <option value="Container Management">Container Management</option>
+                            <option value="Orchestration Tools">Orchestration Tools</option>
+                            <option value="DevOps Tools">DevOps Tools</option>
+                            <option value="CI/CD Pipeline">CI/CD Pipeline</option>
+                            <option value="Infrastructure Management">Infrastructure Management</option>
+                            <option value="Cloud Management">Cloud Management</option>
+                            <option value="Multi-cloud">Multi-cloud</option>
+                            <option value="Hybrid Cloud">Hybrid Cloud</option>
+                            <option value="Edge Computing">Edge Computing</option>
+                            <option value="IoT Platform">IoT Platform</option>
+                            <option value="Machine Learning">Machine Learning</option>
+                            <option value="Artificial Intelligence">Artificial Intelligence</option>
+                            <option value="Natural Language Processing">Natural Language Processing</option>
+                            <option value="Computer Vision">Computer Vision</option>
+                            <option value="Data Science">Data Science</option>
+                            <option value="Big Data">Big Data</option>
+                            <option value="Data Mining">Data Mining</option>
+                            <option value="Predictive Analytics">Predictive Analytics</option>
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Source
+                          </label>
+                          <select
+                            value={editLead.source}
+                            onChange={(e) => setEditLead({ ...editLead, source: e.target.value })}
+                            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          >
+                            <option value="Website">Website</option>
+                            <option value="LinkedIn">LinkedIn</option>
+                            <option value="Referral">Referral</option>
+                            <option value="Trade Show">Trade Show</option>
+                            <option value="Google Ads">Google Ads</option>
+                            <option value="Email Campaign">Email Campaign</option>
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Status
+                          </label>
+                          <select
+                            value={editLead.status}
+                            onChange={(e) => setEditLead({ ...editLead, status: e.target.value })}
+                            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          >
+                            <option value="connected">Connected</option>
+                            <option value="locked">Locked</option>
+                            <option value="meeting-booked">Meeting Booked</option>
+                            <option value="meeting-done">Meeting Done</option>
+                            <option value="negotiation">Negotiation</option>
+                            <option value="closed">Closed</option>
+                            <option value="lost">Lost</option>
+                            <option value="launched-appsumo">Launched on AppSumo</option>
+                            <option value="launched-prime">Launched on Prime Club</option>
+                            <option value="keep-eye">Keep an Eye</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="unsubscribed">Unsubscribed</option>
+                            <option value="outdated">Outdated</option>
+                            <option value="hotlist">Hotlist</option>
+                            <option value="out-of-league">Out of League</option>
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Funding Type
+                          </label>
+                          <select
+                            value={editLead.fundingType}
+                            onChange={(e) => setEditLead({ ...editLead, fundingType: e.target.value })}
+                            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          >
+                            <option value="">Select funding type</option>
+                            <option value="Bootstrapped">Bootstrapped</option>
+                            <option value="Pre-seed">Pre-seed</option>
+                            <option value="Y Combinator">Y Combinator</option>
+                            <option value="Angel">Angel</option>
+                            <option value="Series A">Series A</option>
+                            <option value="Series B">Series B</option>
+                            <option value="Series C">Series C</option>
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Edition
+                          </label>
+                          <select
+                            value={editLead.edition}
+                            onChange={(e) => setEditLead({ ...editLead, edition: e.target.value })}
+                            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          >
+                            <option value="">Select Edition</option>
+                            <option value="Black Edition">Black Edition</option>
+                            <option value="Collector's Edition">Collector's Edition</option>
+                            <option value="Limited Edition">Limited Edition</option>
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Estimated Value
+                          </label>
+                          <Input
+                            type="number"
+                            value={editLead.value}
+                            onChange={(e) => setEditLead({ ...editLead, value: e.target.value })}
+                            placeholder="Enter estimated deal value"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Sales Rep
+                          </label>
+                          <Input
+                            value={editLead.salesRep}
+                            onChange={(e) => setEditLead({ ...editLead, salesRep: e.target.value })}
+                            placeholder="Assigned sales representative"
+                          />
+                        </div>
+                        
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                          Notes
+                        </label>
+                        <textarea
+                          value={editLead.notes}
+                          onChange={(e) => setEditLead({ ...editLead, notes: e.target.value })}
+                          rows={3}
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          placeholder="Add any additional notes..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex-shrink-0 flex justify-end space-x-3 p-6 border-t border-slate-200 bg-white rounded-b-xl">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setShowEditModal(false);
+                        setEditLead(null);
+                        setSelectedLead(null);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit">
+                      Update Lead
+                    </Button>
+                  </div>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+{/* Email Composer Modal */}
+        <EmailComposerModal
+          isOpen={showEmailComposer}
+          onClose={() => {
+            setShowEmailComposer(false);
+            setEmailLead(null);
+          }}
+          selectedLead={emailLead}
+        />
+
+        {/* Email Template Modal */}
+        <EmailTemplateModal
+          isOpen={showTemplateModal}
+          onClose={() => setShowTemplateModal(false)}
+        />
+
+        {/* Lead Detail Modal */}
+        <AnimatePresence>
+          {selectedLead && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              onClick={() => setSelectedLead(null)}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto"
+              >
+                <div className="p-6 border-b border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-medium">
+                        {selectedLead.name.split(" ").map(n => n[0]).join("").toUpperCase()}
+                      </div>
+<div>
+                        <h3 className="text-xl font-semibold text-slate-900">{selectedLead.name}</h3>
+                        <p className="text-slate-600">{selectedLead.company}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setSelectedLead(null)}
+                      className="text-slate-400 hover:text-slate-600"
+                    >
+                      <ApperIcon name="X" className="w-6 h-6" />
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="p-6 space-y-6">
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="text-sm font-semibold text-slate-900 mb-3">Contact Information</h4>
+                      <div className="space-y-2">
+                        {selectedLead.email && (
+                          <div className="flex justify-between">
+                            <span className="text-sm text-slate-600">Email:</span>
+                            <span className="text-sm font-medium text-blue-600">{selectedLead.email}</span>
+                          </div>
+                        )}
+                        {selectedLead.phone && (
+                          <div className="flex justify-between">
+                            <span className="text-sm text-slate-600">Phone:</span>
+                            <span className="text-sm font-medium">{selectedLead.phone}</span>
+                          </div>
+                        )}
+                        {selectedLead.address && (
+                          <div className="flex justify-between">
+                            <span className="text-sm text-slate-600">Address:</span>
+                            <span className="text-sm font-medium text-right max-w-xs">{selectedLead.address}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold text-slate-900 mb-3">Lead Details</h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-slate-600">Status:</span>
+                          <StatusBadge status={selectedLead.status} type="lead" />
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-slate-600">Source:</span>
+                          <span className="text-sm font-medium">{selectedLead.source}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-slate-600">Value:</span>
+                          <span className="text-sm font-medium">${selectedLead.value?.toLocaleString() || 0}</span>
+                        </div>
+                        {selectedLead.priority && (
+                          <div className="flex justify-between">
+                            <span className="text-sm text-slate-600">Priority:</span>
+                            <span className={`text-sm font-medium ${
+                              selectedLead.priority === 'High' ? 'text-red-600' :
+                              selectedLead.priority === 'Medium' ? 'text-yellow-600' :
+                              'text-green-600'
+                            }`}>{selectedLead.priority}</span>
+                          </div>
+                        )}
+                        {selectedLead.createdAt && (
+                          <div className="flex justify-between">
+                            <span className="text-sm text-slate-600">Created:</span>
+                            <span className="text-sm font-medium">
+                              {new Date(selectedLead.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        )}
+                        {selectedLead.lastContact && (
+                          <div className="flex justify-between">
+                            <span className="text-sm text-slate-600">Last Contact:</span>
+                            <span className="text-sm font-medium">
+                              {new Date(selectedLead.lastContact).toLocaleDateString()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {selectedLead.notes && (
+                    <div className="mt-6">
+                      <h4 className="text-sm font-semibold text-slate-900 mb-3">Notes</h4>
+                      <div className="p-3 bg-slate-50 rounded-lg">
+                        <p className="text-sm text-slate-600 whitespace-pre-wrap">{selectedLead.notes}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex space-x-3 pt-4 border-t border-slate-200">
+<Button className="flex-1 bg-blue-600 hover:bg-blue-700">
+                      <ApperIcon name="User" className="w-4 h-4 mr-2" />
+                      Send Email
+                    </Button>
+                    <Button variant="outline" className="flex-1">
+                      <ApperIcon name="TrendingUp" className="w-4 h-4 mr-2" />
+                      Create Deal
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+};
+
+export default Leads;
