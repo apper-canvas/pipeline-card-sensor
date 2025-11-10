@@ -75,23 +75,14 @@ const [newLead, setNewLead] = useState({
     });
   };
 
-const statusOptions = [
+// Status options based on database picklist values: "new,contacted,qualified,unqualified,meeting-done"
+  const statusOptions = [
     { value: "all", label: "All Status" },
-    { value: "connected", label: "Connected" },
-    { value: "locked", label: "Locked" },
-    { value: "meeting-booked", label: "Meeting Booked" },
-    { value: "meeting-done", label: "Meeting Done" },
-    { value: "negotiation", label: "Negotiation" },
-    { value: "closed", label: "Closed" },
-    { value: "lost", label: "Lost" },
-    { value: "launched-appsumo", label: "Launched on AppSumo" },
-    { value: "launched-prime", label: "Launched on Prime Club" },
-    { value: "keep-eye", label: "Keep an Eye" },
-    { value: "rejected", label: "Rejected" },
-    { value: "unsubscribed", label: "Unsubscribed" },
-    { value: "outdated", label: "Outdated" },
-    { value: "hotlist", label: "Hotlist" },
-    { value: "out-of-league", label: "Out of League" }
+    { value: "new", label: "New" },
+    { value: "contacted", label: "Contacted" },
+    { value: "qualified", label: "Qualified" },
+    { value: "unqualified", label: "Unqualified" },
+    { value: "meeting-done", label: "Meeting Done" }
   ];
 
 const sourceOptions = [
@@ -892,8 +883,8 @@ onClick={(e) => {
                         )}
                       </td>
                       <td className="px-4 py-4">
-                        <select
-value={lead.status_c || lead.status}
+<select
+                          value={lead.status_c || lead.status}
                           onChange={(e) => {
                             e.stopPropagation();
                             handleStatusUpdate(lead.Id, e.target.value);
@@ -901,11 +892,11 @@ value={lead.status_c || lead.status}
                           onClick={(e) => e.stopPropagation()}
                           className="text-xs border-0 bg-transparent focus:ring-0 focus:outline-none cursor-pointer"
                         >
-                          <option value="new">New</option>
-                          <option value="contacted">Contacted</option>
-                          <option value="qualified">Qualified</option>
-                          <option value="unqualified">Unqualified</option>
-                          <option value="meeting-done">Meeting Done</option>
+                          {statusOptions.filter(option => option.value !== "all").map(option => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
                         </select>
                         <StatusBadge status={lead.status_c || lead.status} type="lead" />
                       </td>
