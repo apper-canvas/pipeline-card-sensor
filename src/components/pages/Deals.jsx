@@ -283,7 +283,7 @@ onClick={() => setSelectedDeal(deal)}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 onClick={(e) => e.stopPropagation()}
-                className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-200"
+className="w-full max-w-2xl max-h-[80vh] overflow-y-auto modal-scrollbar bg-white rounded-xl shadow-xl border border-slate-200"
               >
                 <div className="p-6 border-b border-slate-200">
                   <h3 className="text-lg font-semibold text-slate-900">Add New Deal</h3>
