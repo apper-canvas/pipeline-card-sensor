@@ -76,7 +76,8 @@ const [newLead, setNewLead] = useState({
   };
 
 // Status options based on database picklist values: "new,contacted,qualified,unqualified,meeting-done"
-  const statusOptions = [
+// Status options based on database picklist values: "new,contacted,qualified,unqualified,meeting-done"
+const statusOptions = [
     { value: "all", label: "All Status" },
     { value: "new", label: "New" },
     { value: "contacted", label: "Contacted" },
