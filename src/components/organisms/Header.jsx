@@ -10,10 +10,11 @@ const Header = () => {
   const { logout } = useAuth();
   const { user, isAuthenticated } = useSelector(state => state.user);
 
-  const navigationItems = [
+const navigationItems = [
     { name: "Dashboard", path: "/", icon: "LayoutDashboard" },
     { name: "Leads", path: "/leads", icon: "Users" },
     { name: "Deals", path: "/deals", icon: "TrendingUp" },
+    { name: "Tasks", path: "/tasks", icon: "CheckSquare" },
     { name: "Calendar", path: "/calendar", icon: "Calendar" }
   ];
 

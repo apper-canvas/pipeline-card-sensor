@@ -44,6 +44,15 @@
             "rule": "public"
           }
         ]
+}
+    },
+    "tasks": {
+      "isPublic": false,
+      "requiresAuth": true,
+      "allowedRoles": ["user", "admin"],
+      "meta": {
+        "title": "Tasks",
+        "description": "Manage your to-dos and follow-ups"
       }
     }
   },

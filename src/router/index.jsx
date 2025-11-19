@@ -8,9 +8,9 @@ import Layout from "@/components/organisms/Layout";
 const Dashboard = lazy(() => import("@/components/pages/Dashboard"));
 const Leads = lazy(() => import("@/components/pages/Leads"));
 const Deals = lazy(() => import("@/components/pages/Deals"));
+const Tasks = lazy(() => import("@/components/pages/Tasks"));
 const Calendar = lazy(() => import("@/components/pages/Calendar"));
 const NotFound = lazy(() => import("@/components/pages/NotFound"));
-
 // Authentication pages
 const Login = lazy(() => import("@/components/pages/Login"));
 const Signup = lazy(() => import("@/components/pages/Signup"));
@@ -79,6 +79,10 @@ const mainRoutes = [
   createRoute({
     path: "deals", 
     element: <Deals />
+  }),
+createRoute({
+    path: "tasks",
+    element: <Tasks />
   }),
   createRoute({
     path: "calendar",
