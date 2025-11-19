@@ -10,16 +10,18 @@ import Loading from '@/components/ui/Loading';
 import Empty from '@/components/ui/Empty';
 import Error from '@/components/ui/Error';
 import CreateTaskModal from '@/components/molecules/CreateTaskModal';
+import EditTaskModal from '@/components/molecules/EditTaskModal';
 import { toast } from 'react-toastify';
 
 const Tasks = () => {
-  const [tasks, setTasks] = useState([]);
+const [tasks, setTasks] = useState([]);
   const [filteredTasks, setFilteredTasks] = useState([]);
   const [stats, setStats] = useState({ total: 0, overdue: 0, dueToday: 0, completedThisWeek: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
   // Filter states
   const [activeFilter, setActiveFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('');
@@ -144,7 +146,7 @@ task.task_title_c?.toLowerCase().includes(query) ||
     }
   };
 
-  const handleTaskDelete = async (taskId) => {
+const handleTaskDelete = async (taskId) => {
     if (window.confirm("Are you sure you want to delete this task?")) {
       try {
         await tasksService.delete(taskId);
@@ -153,6 +155,11 @@ task.task_title_c?.toLowerCase().includes(query) ||
         toast.error("Failed to delete task");
       }
     }
+  };
+
+  const handleTaskEdit = (task) => {
+    setSelectedTask(task);
+    setIsEditModalOpen(true);
   };
 
   const clearAllFilters = () => {
@@ -320,9 +327,12 @@ task.task_title_c?.toLowerCase().includes(query) ||
                 </span>
               </div>
 
-              {/* Actions */}
+{/* Actions */}
               <div className="flex items-center space-x-1">
-                <button className="p-1 text-slate-400 hover:text-slate-600 rounded">
+                <button 
+                  onClick={() => handleTaskEdit(task)}
+                  className="p-1 text-slate-400 hover:text-slate-600 rounded"
+                >
                   <ApperIcon name="Edit" className="w-4 h-4" />
                 </button>
                 <button
@@ -651,11 +661,19 @@ task.task_title_c?.toLowerCase().includes(query) ||
         </div>
       </div>
 
-      {/* Create Task Modal */}
+{/* Create Task Modal */}
       <CreateTaskModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onTaskCreated={loadTasks}
+      />
+
+      {/* Edit Task Modal */}
+      <EditTaskModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onTaskUpdated={loadTasks}
+        task={selectedTask}
       />
     </div>
   );
