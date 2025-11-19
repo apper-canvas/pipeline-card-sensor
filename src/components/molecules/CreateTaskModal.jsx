@@ -24,7 +24,7 @@ description_c: '',
 
   const [errors, setErrors] = useState({});
 
-  const resetForm = () => {
+const resetForm = () => {
     setFormData({
       task_title_c: '',
       task_type_c: 'To-Do',
@@ -34,12 +34,10 @@ description_c: '',
       assign_to_c: '',
       related_to_c: '',
       description_c: '',
+      tags_c: '',
       isAllDay: false
-});
+    });
     
-    if (!formData.tags_c?.trim()) {
-      newErrors.tags_c = 'Tags field cannot be empty';
-    }
     setErrors({});
     setIsQuickMode(true);
   };
@@ -387,7 +385,7 @@ task_title_c: formData.task_title_c.trim(),
                       type="text"
                       name="tags_c"
                       value={formData.tags_c}
-                      onChange={handleInputChange}
+onChange={(e) => handleInputChange('tags_c', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                       placeholder="Enter tags separated by commas (e.g., urgent, client, follow-up)"
                     />
