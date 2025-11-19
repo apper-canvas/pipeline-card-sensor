@@ -112,7 +112,7 @@ export const leadsService = {
 
       // Only include Updateable fields
       const createData = {
-        Name: leadData.name_c || leadData.name,
+Name: leadData.name_c || leadData.name,
         name_c: leadData.name_c || leadData.name,
         email_c: leadData.email_c || leadData.email,
         phone_c: leadData.phone_c || leadData.phone,
@@ -189,7 +189,7 @@ export const leadsService = {
       // Map old field names to new ones
       const fieldMapping = {
         name: 'name_c',
-        email: 'email_c',
+email: 'email_c',
         phone: 'phone_c',
         company: 'company_c',
         position: 'position_c',

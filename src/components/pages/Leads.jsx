@@ -5,15 +5,15 @@ import { format } from "date-fns";
 import { toast } from "react-toastify";
 import App from "@/App";
 import ApperIcon from "@/components/ApperIcon";
+import StatusBadge from "@/components/molecules/StatusBadge";
+import EmailTemplateModal from "@/components/molecules/EmailTemplateModal";
+import EmailComposerModal from "@/components/molecules/EmailComposerModal";
+import Loading from "@/components/ui/Loading";
+import Empty from "@/components/ui/Empty";
+import Error from "@/components/ui/Error";
+import Dashboard from "@/components/pages/Dashboard";
 import Button from "@/components/atoms/Button";
 import Input from "@/components/atoms/Input";
-import Dashboard from "@/components/pages/Dashboard";
-import EmailComposerModal from "@/components/molecules/EmailComposerModal";
-import EmailTemplateModal from "@/components/molecules/EmailTemplateModal";
-import StatusBadge from "@/components/molecules/StatusBadge";
-import Error from "@/components/ui/Error";
-import Empty from "@/components/ui/Empty";
-import Loading from "@/components/ui/Loading";
 const Leads = () => {
   const [leads, setLeads] = useState([]);
   const [filteredLeads, setFilteredLeads] = useState([]);
@@ -42,6 +42,7 @@ const [filterStatus, setFilterStatus] = useState("");
   const [viewMode, setViewMode] = useState('table');
 const [newLead, setNewLead] = useState({
     name: "",
+    email: "",
     company: "",
     source: "Website",
     status: "connected",
@@ -59,7 +60,8 @@ const [newLead, setNewLead] = useState({
 
   const initializeEditLead = (lead) => {
     setEditLead({
-      name: lead.name_c || lead.name || "",
+name: lead.name_c || lead.name || "",
+      email: lead.email_c || lead.email || "",
       company: lead.company_c || lead.company || "",
       source: lead.source_c || lead.source || "Website",
       status: lead.status_c || lead.status || "connected",
@@ -161,7 +163,8 @@ const editionOptions = [
 if (searchTerm) {
 filtered = filtered.filter(lead =>
         (lead.name_c || lead.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (lead.company_c || lead.company || '').toLowerCase().includes(searchTerm.toLowerCase())
+        (lead.company_c || lead.company || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (lead.email_c || lead.email || '').toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -191,7 +194,8 @@ const handleAddLead = async (e) => {
       setLeads(prev => [createdLead, ...prev]);
       setShowAddModal(false);
       setNewLead({
-        name: "",
+name: "",
+        email: "",
         company: "",
         source: "Website",
         status: "connected",
@@ -463,12 +467,14 @@ value={statusFilter}
                           >
                             <ApperIcon name="Eye" size={14} />
                           </button>
-                          <span>Name</span>
-                        </div>
-                      </th>
-                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Company
-                    </th>
+<span>Name</span>
+                        </th>
+<th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                          <span>Email</span>
+                        </th>
+                        <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                          Company
+                        </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Website URL
                     </th>
@@ -569,6 +575,43 @@ value={statusFilter}
                         </div>
                           </div>
                         </div>
+</td>
+                        <td className="px-4 py-4">
+                          {editingCell === `${lead.Id}-email` ? (
+                            <div className="flex items-center gap-1">
+                              <Input
+                                type="email"
+                                value={editingValue}
+                                onChange={(e) => setEditingValue(e.target.value)}
+                                onKeyDown={(e) => handleKeyPress(e, lead.Id, 'email')}
+                                className="text-xs h-6 w-32"
+                                autoFocus
+                              />
+                              <button
+                                onClick={() => handleCellSave(lead.Id, 'email')}
+                                disabled={savingCell === `${lead.Id}-email`}
+                                className="p-1 text-green-600 hover:text-green-800 disabled:opacity-50"
+                              >
+                                <ApperIcon name="Check" className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={handleCellCancel}
+                                className="p-1 text-red-600 hover:text-red-800"
+                              >
+                                <ApperIcon name="X" className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <span 
+                              className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer hover:bg-slate-100 px-1 py-0.5 rounded"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCellEdit(lead.Id, 'email', lead.email_c || lead.email);
+                              }}
+                            >
+                              {lead.email_c || lead.email || 'No email'}
+                            </span>
+                          )}
                         </td>
                       <td className="px-4 py-4">
                         <div>
@@ -1220,16 +1263,31 @@ className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-20
 <form onSubmit={handleAddLead} className="flex flex-col h-full">
                   <div className="flex-1 overflow-y-auto p-6 modal-scrollbar">
                     <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-2">
-                            Product Name *
+                            Lead Name *
                           </label>
                           <Input
+                            placeholder="Enter lead name"
                             value={newLead.name}
                             onChange={(e) => setNewLead({ ...newLead, name: e.target.value })}
+                            className="w-full"
                             required
-                            placeholder="Enter product name"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-slate-700 mb-2">
+                            Email *
+                          </label>
+                          <Input
+                            type="email"
+                            placeholder="Enter email address"
+                            value={newLead.email}
+                            onChange={(e) => setNewLead({ ...newLead, email: e.target.value })}
+                            className="w-full"
+                            required
                           />
                         </div>
                         
@@ -1329,21 +1387,28 @@ className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-20
                             <option value="Google Ads">Google Ads</option>
                             <option value="Email Campaign">Email Campaign</option>
                           </select>
-                        </div>
+</div>
                         
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-2">
-                            Status
+                            Lead Temperature *
                           </label>
                           <select
                             value={newLead.status}
                             onChange={(e) => setNewLead({ ...newLead, status: e.target.value })}
                             className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           >
+                            <option value="hot">🔥 Hot Lead</option>
+                            <option value="warm">🌡️ Warm Lead</option>
+                            <option value="cold">❄️ Cold Lead</option>
+                            <option value="new">New</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="qualified">Qualified</option>
+                            <option value="unqualified">Unqualified</option>
+                            <option value="meeting-done">Meeting Done</option>
                             <option value="connected">Connected</option>
                             <option value="locked">Locked</option>
                             <option value="meeting-booked">Meeting Booked</option>
-                            <option value="meeting-done">Meeting Done</option>
                             <option value="negotiation">Negotiation</option>
                             <option value="closed">Closed</option>
                             <option value="lost">Lost</option>
@@ -1692,7 +1757,7 @@ className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-20
                           <select
                             value={editLead.source}
                             onChange={(e) => setEditLead({ ...editLead, source: e.target.value })}
-                            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           >
                             <option value="Website">Website</option>
                             <option value="LinkedIn">LinkedIn</option>
@@ -1705,17 +1770,24 @@ className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-20
                         
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-2">
-                            Status
+                            Lead Temperature
                           </label>
                           <select
                             value={editLead.status}
                             onChange={(e) => setEditLead({ ...editLead, status: e.target.value })}
                             className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           >
+                            <option value="hot">🔥 Hot Lead</option>
+                            <option value="warm">🌡️ Warm Lead</option>
+                            <option value="cold">❄️ Cold Lead</option>
+                            <option value="new">New</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="qualified">Qualified</option>
+                            <option value="unqualified">Unqualified</option>
+                            <option value="meeting-done">Meeting Done</option>
                             <option value="connected">Connected</option>
                             <option value="locked">Locked</option>
                             <option value="meeting-booked">Meeting Booked</option>
-                            <option value="meeting-done">Meeting Done</option>
                             <option value="negotiation">Negotiation</option>
                             <option value="closed">Closed</option>
                             <option value="lost">Lost</option>
@@ -1729,7 +1801,6 @@ className="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-slate-20
                             <option value="out-of-league">Out of League</option>
                           </select>
                         </div>
-                        
                         <div>
                           <label className="block text-sm font-medium text-slate-700 mb-2">
                             Funding Type
