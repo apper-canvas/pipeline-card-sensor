@@ -103,12 +103,13 @@ const Tasks = () => {
     }
 
     // Apply search
-    if (searchQuery) {
+if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(task =>
         task.task_title_c?.toLowerCase().includes(query) ||
         task.description_c?.toLowerCase().includes(query) ||
-        task.assign_to_c?.toLowerCase().includes(query)
+        task.assign_to_c?.toLowerCase().includes(query) ||
+        task.Tags?.toLowerCase().includes(query)
       );
     }
 
@@ -291,7 +292,21 @@ const Tasks = () => {
                 <ApperIcon name="Building" className="w-4 h-4 text-slate-400" />
                 <span>Related: {task.related_to_c}</span>
               </div>
-            )}
+)}
+            <td className="px-6 py-4 whitespace-nowrap">
+              {task.Tags && (
+                <div className="flex flex-wrap gap-1">
+                  {task.Tags.split(',').map((tag, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                    >
+                      {tag.trim()}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </td>
 
             {/* Task Type & Status */}
             <div className="flex items-center justify-between mt-3">

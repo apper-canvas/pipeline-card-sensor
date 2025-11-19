@@ -1,5 +1,6 @@
-import { getApperClient } from '@/services/apperClient';
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
+import React from "react";
+import { getApperClient } from "@/services/apperClient";
 
 const TABLE_NAME = 'tasks_c';
 
@@ -19,7 +20,8 @@ export const tasksService = {
           {"field": {"Name": "related_to_c"}},
           {"field": {"Name": "description_c"}},
           {"field": {"Name": "CreatedOn"}},
-          {"field": {"Name": "ModifiedOn"}}
+{"field": {"Name": "ModifiedOn"}},
+          {"field": {"Name": "Tags"}}
         ],
         orderBy: [{"fieldName": "due_date_c", "sorttype": "ASC"}],
         pagingInfo: {"limit": 100, "offset": 0}
@@ -55,8 +57,8 @@ export const tasksService = {
           {"field": {"Name": "assign_to_c"}},
           {"field": {"Name": "related_to_c"}},
           {"field": {"Name": "description_c"}},
-          {"field": {"Name": "CreatedOn"}},
-          {"field": {"Name": "ModifiedOn"}}
+{"field": {"Name": "ModifiedOn"}},
+          {"field": {"Name": "Tags"}}
         ]
       };
 
@@ -90,7 +92,7 @@ export const tasksService = {
       if (taskData.assign_to_c) filteredData.assign_to_c = taskData.assign_to_c;
       if (taskData.related_to_c) filteredData.related_to_c = taskData.related_to_c;
       if (taskData.description_c) filteredData.description_c = taskData.description_c;
-
+if (taskData.tags_c !== undefined) filteredData.tags_c = taskData.tags_c;
       const params = {
         records: [filteredData]
       };
@@ -141,7 +143,8 @@ export const tasksService = {
       if (taskData.due_date_c !== undefined) filteredData.due_date_c = taskData.due_date_c;
       if (taskData.assign_to_c !== undefined) filteredData.assign_to_c = taskData.assign_to_c;
       if (taskData.related_to_c !== undefined) filteredData.related_to_c = taskData.related_to_c;
-      if (taskData.description_c !== undefined) filteredData.description_c = taskData.description_c;
+if (taskData.description_c !== undefined) filteredData.description_c = taskData.description_c;
+      if (taskData.tags_c !== undefined) filteredData.tags_c = taskData.tags_c;
 
       const params = {
         records: [filteredData]

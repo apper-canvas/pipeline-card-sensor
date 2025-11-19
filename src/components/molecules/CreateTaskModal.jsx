@@ -17,7 +17,8 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
     due_date_c: '',
     assign_to_c: '',
     related_to_c: '',
-    description_c: '',
+description_c: '',
+    tags_c: '',
     isAllDay: false
   });
 
@@ -34,7 +35,11 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
       related_to_c: '',
       description_c: '',
       isAllDay: false
-    });
+});
+    
+    if (!formData.tags_c?.trim()) {
+      newErrors.tags_c = 'Tags field cannot be empty';
+    }
     setErrors({});
     setIsQuickMode(true);
   };
@@ -85,13 +90,14 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
     try {
       // Format the data for API submission
       const taskData = {
-        task_title_c: formData.task_title_c.trim(),
+task_title_c: formData.task_title_c.trim(),
         task_type_c: formData.task_type_c,
         priority_c: formData.priority_c,
         status_c: formData.status_c,
         assign_to_c: formData.assign_to_c.trim() || null,
         related_to_c: formData.related_to_c.trim() || null,
-        description_c: formData.description_c.trim() || null
+        description_c: formData.description_c.trim() || null,
+        tags_c: formData.tags_c.trim() || null
       };
 
       // Format due date if provided
@@ -371,7 +377,24 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
                         placeholder="Company, Contact, or Deal..."
                       />
                     </div>
-                  )}
+)}
+                  
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tags
+                    </label>
+                    <input
+                      type="text"
+                      name="tags_c"
+                      value={formData.tags_c}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                      placeholder="Enter tags separated by commas (e.g., urgent, client, follow-up)"
+                    />
+                    {errors.tags_c && (
+                      <p className="mt-1 text-sm text-red-600">{errors.tags_c}</p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Description - Full Mode Only */}
