@@ -516,11 +516,12 @@ Last Contact
                       Modified On
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Modified By
+Modified By
                     </th>
                     <th className="sticky right-0 bg-white px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider border-l border-slate-200">
                       Actions
                     </th>
+                  </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {filteredLeads.map((lead, index) => (
@@ -1001,11 +1002,10 @@ Last Contact
                           {(lead.source_c || lead.source) || "Unknown"}
                         </span>
                       </td>
-                      <td className="px-4 py-4">
+<td className="px-4 py-4">
                         <span className="text-xs font-medium text-slate-600">
                           {lead.ModifiedOn ? new Date(lead.ModifiedOn).toLocaleDateString() : "N/A"}
                         </span>
-</td>
                       </td>
                       <td className="px-4 py-4">
                         <span className="text-xs font-medium text-slate-600">

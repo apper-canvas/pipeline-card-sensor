@@ -476,10 +476,9 @@ className="w-full max-w-2xl max-h-[80vh] overflow-y-auto modal-scrollbar bg-whit
                       <div className="space-y-2">
                         <div className="flex justify-between">
 <span className="text-sm text-slate-600">Assigned to:</span>
-                          <span className="text-sm font-medium">{selectedDeal.assigned_to_c || selectedDeal.assignedTo}</span>
+<span className="text-sm font-medium">{selectedDeal.assigned_to_c || selectedDeal.assignedTo}</span>
                         </div>
                         <div className="flex justify-between">
-<div className="flex justify-between">
                           <span className="text-sm text-slate-600">Created:</span>
                           <span className="text-sm font-medium">
                             {format(new Date(selectedDeal.CreatedOn || selectedDeal.createdAt || new Date()), "MMM dd, yyyy")}
@@ -491,6 +490,7 @@ className="w-full max-w-2xl max-h-[80vh] overflow-y-auto modal-scrollbar bg-whit
                             {format(new Date(selectedDeal.ModifiedOn || selectedDeal.updatedAt || new Date()), "MMM dd, yyyy")}
                           </span>
                         </div>
+                      </div>
                     </div>
                   </div>
                   
