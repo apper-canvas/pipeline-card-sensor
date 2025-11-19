@@ -501,13 +501,25 @@ value={statusFilter}
                       Status
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Last Contact
+Last Contact
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Sales Rep
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Source
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Created On
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Modified On
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Created By
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Modified By
                     </th>
                     <th className="sticky right-0 bg-white px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider border-l border-slate-200">
                       Actions
@@ -984,8 +996,33 @@ value={statusFilter}
                         </span>
                       </td>
                       <td className="px-4 py-4">
-                        <span className="text-xs font-medium text-slate-900">
+<span className="text-xs font-medium text-slate-900">
                           {(lead.sales_rep_c || lead.salesRep) || "Unassigned"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="text-xs font-medium text-slate-900">
+                          {(lead.source_c || lead.source) || "Unknown"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="text-xs font-medium text-slate-600">
+                          {lead.CreatedOn ? new Date(lead.CreatedOn).toLocaleDateString() : "N/A"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="text-xs font-medium text-slate-600">
+                          {lead.ModifiedOn ? new Date(lead.ModifiedOn).toLocaleDateString() : "N/A"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="text-xs font-medium text-slate-600">
+                          {lead.CreatedBy?.Name || "Unknown"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">
+                        <span className="text-xs font-medium text-slate-600">
+                          {lead.ModifiedBy?.Name || "Unknown"}
                         </span>
                       </td>
                       <td className="px-4 py-4">
