@@ -465,9 +465,10 @@ value={statusFilter}
                             className="text-slate-400 hover:text-slate-600 transition-colors"
                             title="View Records"
                           >
-                            <ApperIcon name="Eye" size={14} />
+<ApperIcon name="Eye" size={14} />
                           </button>
 <span>Name</span>
+                        </div>
                         </th>
 <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                           <span>Email</span>
