@@ -107,7 +107,7 @@ if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(task =>
         task.task_title_c?.toLowerCase().includes(query) ||
-        task.description_c?.toLowerCase().includes(query) ||
+task.task_title_c?.toLowerCase().includes(query) ||
         task.assign_to_c?.toLowerCase().includes(query) ||
         task.Tags?.toLowerCase().includes(query)
       );

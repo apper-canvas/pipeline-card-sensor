@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { tasksService } from '@/services/api/tasksService';
-import ApperIcon from '@/components/ApperIcon';
-import Button from '@/components/atoms/Button';
-import Input from '@/components/atoms/Input';
-import { toast } from 'react-toastify';
+import React, { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { tasksService } from "@/services/api/tasksService";
+import { toast } from "react-toastify";
+import ApperIcon from "@/components/ApperIcon";
+import Button from "@/components/atoms/Button";
+import Input from "@/components/atoms/Input";
 
 const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
   const [isQuickMode, setIsQuickMode] = useState(true);
@@ -18,7 +18,7 @@ const CreateTaskModal = ({ isOpen, onClose, onTaskCreated }) => {
     assign_to_c: '',
     related_to_c: '',
 description_c: '',
-    tags_c: '',
+    Tags: '',
     isAllDay: false
   });
 
@@ -33,8 +33,8 @@ const resetForm = () => {
       due_date_c: '',
       assign_to_c: '',
       related_to_c: '',
-      description_c: '',
-      tags_c: '',
+description_c: '',
+      Tags: '',
       isAllDay: false
     });
     
@@ -94,10 +94,9 @@ task_title_c: formData.task_title_c.trim(),
         status_c: formData.status_c,
         assign_to_c: formData.assign_to_c.trim() || null,
         related_to_c: formData.related_to_c.trim() || null,
-        description_c: formData.description_c.trim() || null,
-        tags_c: formData.tags_c.trim() || null
+description_c: formData.description_c.trim() || null,
+        Tags: formData.Tags.trim() || null
       };
-
       // Format due date if provided
       if (formData.due_date_c) {
         if (formData.isAllDay) {
@@ -378,19 +377,17 @@ task_title_c: formData.task_title_c.trim(),
 )}
                   
                   <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
                       Tags
                     </label>
-                    <input
+                    <Input
                       type="text"
-                      name="tags_c"
-                      value={formData.tags_c}
-onChange={(e) => handleInputChange('tags_c', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                       placeholder="Enter tags separated by commas (e.g., urgent, client, follow-up)"
+                      value={formData.Tags}
+                      onChange={(e) => handleInputChange('Tags', e.target.value)}
                     />
-                    {errors.tags_c && (
-                      <p className="mt-1 text-sm text-red-600">{errors.tags_c}</p>
+                    {errors.Tags && (
+                      <p className="mt-1 text-sm text-red-600">{errors.Tags}</p>
                     )}
                   </div>
                 </div>

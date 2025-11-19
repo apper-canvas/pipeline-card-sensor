@@ -91,8 +91,8 @@ export const tasksService = {
       if (taskData.due_date_c) filteredData.due_date_c = taskData.due_date_c;
       if (taskData.assign_to_c) filteredData.assign_to_c = taskData.assign_to_c;
       if (taskData.related_to_c) filteredData.related_to_c = taskData.related_to_c;
-      if (taskData.description_c) filteredData.description_c = taskData.description_c;
-if (taskData.tags_c !== undefined) filteredData.tags_c = taskData.tags_c;
+if (taskData.description_c !== undefined) filteredData.description_c = taskData.description_c;
+      if (taskData.Tags !== undefined) filteredData.Tags = taskData.Tags;
       const params = {
         records: [filteredData]
       };
@@ -144,7 +144,7 @@ if (taskData.tags_c !== undefined) filteredData.tags_c = taskData.tags_c;
       if (taskData.assign_to_c !== undefined) filteredData.assign_to_c = taskData.assign_to_c;
       if (taskData.related_to_c !== undefined) filteredData.related_to_c = taskData.related_to_c;
 if (taskData.description_c !== undefined) filteredData.description_c = taskData.description_c;
-      if (taskData.tags_c !== undefined) filteredData.tags_c = taskData.tags_c;
+      if (taskData.Tags !== undefined) filteredData.Tags = taskData.Tags;
 
       const params = {
         records: [filteredData]
