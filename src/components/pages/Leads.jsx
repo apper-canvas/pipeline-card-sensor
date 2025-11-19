@@ -509,14 +509,11 @@ Last Contact
                     <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Source
                     </th>
-                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Created On
+<th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      Notes
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Modified On
-                    </th>
-                    <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                      Created By
                     </th>
                     <th className="px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Modified By
@@ -524,7 +521,6 @@ Last Contact
                     <th className="sticky right-0 bg-white px-4 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider border-l border-slate-200">
                       Actions
                     </th>
-                  </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {filteredLeads.map((lead, index) => (
@@ -1007,18 +1003,9 @@ Last Contact
                       </td>
                       <td className="px-4 py-4">
                         <span className="text-xs font-medium text-slate-600">
-                          {lead.CreatedOn ? new Date(lead.CreatedOn).toLocaleDateString() : "N/A"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4">
-                        <span className="text-xs font-medium text-slate-600">
                           {lead.ModifiedOn ? new Date(lead.ModifiedOn).toLocaleDateString() : "N/A"}
                         </span>
-                      </td>
-                      <td className="px-4 py-4">
-                        <span className="text-xs font-medium text-slate-600">
-                          {lead.CreatedBy?.Name || "Unknown"}
-                        </span>
+</td>
                       </td>
                       <td className="px-4 py-4">
                         <span className="text-xs font-medium text-slate-600">

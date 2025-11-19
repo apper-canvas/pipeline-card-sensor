@@ -5,12 +5,12 @@ import { leadsService } from "@/services/api/leadsService";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
 import ApperIcon from "@/components/ApperIcon";
+import StatusBadge from "@/components/molecules/StatusBadge";
+import Loading from "@/components/ui/Loading";
+import Empty from "@/components/ui/Empty";
+import Error from "@/components/ui/Error";
 import Button from "@/components/atoms/Button";
 import Input from "@/components/atoms/Input";
-import StatusBadge from "@/components/molecules/StatusBadge";
-import Error from "@/components/ui/Error";
-import Empty from "@/components/ui/Empty";
-import Loading from "@/components/ui/Loading";
 
 const Deals = () => {
   const [deals, setDeals] = useState([]);
@@ -479,18 +479,18 @@ className="w-full max-w-2xl max-h-[80vh] overflow-y-auto modal-scrollbar bg-whit
                           <span className="text-sm font-medium">{selectedDeal.assigned_to_c || selectedDeal.assignedTo}</span>
                         </div>
                         <div className="flex justify-between">
+<div className="flex justify-between">
                           <span className="text-sm text-slate-600">Created:</span>
-<span className="text-sm font-medium">
-                            {format(new Date(selectedDeal.CreatedOn || selectedDeal.createdAt), "MMM dd, yyyy")}
+                          <span className="text-sm font-medium">
+                            {format(new Date(selectedDeal.CreatedOn || selectedDeal.createdAt || new Date()), "MMM dd, yyyy")}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-sm text-slate-600">Last Updated:</span>
-<span className="text-sm font-medium">
-                            {format(new Date(selectedDeal.ModifiedOn || selectedDeal.updatedAt), "MMM dd, yyyy")}
+                          <span className="text-sm font-medium">
+                            {format(new Date(selectedDeal.ModifiedOn || selectedDeal.updatedAt || new Date()), "MMM dd, yyyy")}
                           </span>
                         </div>
-                      </div>
                     </div>
                   </div>
                   
